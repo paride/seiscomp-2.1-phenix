@@ -31,13 +31,18 @@ Beside the `build-essential` tools a few packages are needed:
 In order to build the pdf manual (disabled by default) `texlive` is also
 needed. To build this software simply run `make` in the `src` directory.
 
+### Cleaning up
+
+Run `make veryclean` in `src/`.
+
 ## Notable changes
 
 Two plugins have been removed:
 
 - The Guralp plugin, as it comes with an x86 binary library. Source code is
 available on request, but its redistribution is explicitly forbidden.
-- The NRTS plugin (broken, and NRTS is no longer supported by IRIS).
+- The `fs` plugin, used to feed data from files in Titan, Seisan or Mini-SEED format
+(broken, especially the Titan part). This is disabled in SeisComP 2.5.
 
 ## Freedom status
 
