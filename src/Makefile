@@ -1,5 +1,5 @@
 DIRS = qlib2 libslink libslutils libslplugin seedlink plugins slarchive \
-       slinktool slqplot arclink tek2gif utils comserv doc
+       slinktool slqplot arclink tek2gif utils comserv
 
 all: $(DIRS)
 
