@@ -123,7 +123,7 @@ long open_Frd_noex   (char*, FILE**);
 long open_Fapp       (char*, FILE**);
 void open_Fwr        (char*, FILE**);
 long fcreat_append   (char*, FILE**);
-int  getline         (FILE*, char*);
+//int  getline         (FILE*, char*);
 int  getLine         (FILE*, char*, int, char, int*);
 int  sparse          (char*, char**, char*, int);
 int  trim            (char*);

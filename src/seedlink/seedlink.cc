@@ -32,6 +32,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/resource.h>
+#include <sys/stat.h>
 
 #if defined(__GNU_LIBRARY__) || defined(__GLIBC__)
 #include <getopt.h>

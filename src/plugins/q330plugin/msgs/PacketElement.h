@@ -56,6 +56,6 @@ class PacketElement
     qma_uint8          p_bits_swapped[MAX_BYTES_IN_PACKET];
 #endif
     // SPecifics of this will be filled in, in derived classes
-    Field              p_fieldList[];
+    Field              p_fieldList[0];
 };
 #endif

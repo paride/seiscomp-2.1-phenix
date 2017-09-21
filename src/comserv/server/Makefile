@@ -5,7 +5,7 @@ CSUDIR	= ../util
 CSULIB  = $(CSUDIR)/libutil.a
 QDIR    = ../../qlib2
 QLIB    = $(QDIR)/libqlib2.a
-CFLAGS	= -O -fwritable-strings -fpack-struct -I$(INCL) -I$(QDIR)
+CFLAGS	= -O2 -fpack-struct -fpermissive -I$(INCL) -I$(QDIR)
 LDFLAGS	=
 LDLIBS	=
 

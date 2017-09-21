@@ -23,6 +23,7 @@
  */
 #include <iostream>
 #include <string>
+#include <string.h>
 #include "FrameUtils.h"
 #include "QmaLimits.h"
 #include "QmaTypes.h"

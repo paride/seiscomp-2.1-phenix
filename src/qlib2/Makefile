@@ -42,7 +42,7 @@ MANDIR	= /usr/local/man
 MANEXT	= 1
 
 CC	= gcc
-COPT	= -O2 -fwritable-strings
+COPT	= -O2
 CFLAGS  = $(COPT)
 
 # -Dfortran_suffix is required for fortran Compilers that use the BSD 

@@ -23,6 +23,7 @@
  */
 #include <iostream>
 #include <string>
+#include <string.h>
 #include "ProcessDCComp.h"
 
 #include "QmaTypes.h"

@@ -28,6 +28,7 @@
  */
 #include <iostream>
 #include <iomanip>
+#include <string.h>
 #include "Field.h"
 #include "Packet.h"
 #include "CRC.h"

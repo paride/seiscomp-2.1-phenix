@@ -23,6 +23,8 @@
  *
  */
 #include <iostream>
+#include <ctime>
+#include <string.h>
 #include <time.h>
 #include "TxCmd.h"
 #include "QMA_Port.h"

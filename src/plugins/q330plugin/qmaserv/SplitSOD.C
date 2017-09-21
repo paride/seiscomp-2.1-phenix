@@ -25,6 +25,7 @@
  */
 #include <iostream>
 #include <string>
+#include <string.h>
 #include "SplitSOD.h"
 #include "QmaLimits.h"
 #include "QmaTypes.h"

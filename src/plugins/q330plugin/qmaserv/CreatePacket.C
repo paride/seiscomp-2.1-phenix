@@ -27,6 +27,7 @@
 #include <iostream>
 #include <string>
 #include <map>
+#include <string.h>
 #include "CreatePacket.h"
 #include "QmaLimits.h"
 #include "QmaTypes.h"

@@ -23,6 +23,7 @@
  *
  */
 #include <iostream>
+#include <string.h>
 
 #include "ProcessAG816.h"
 #include "QmaTypes.h"

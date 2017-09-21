@@ -6,7 +6,7 @@
 #
 ################################################################################ 
 CC	       = gcc -DCOMSERV
-CFLAGS         = -O2 -fwritable-strings
+CFLAGS         = -O2
 #CFLAGS        = -ansi -g
 INCLUDE        = 
 LIBS           = 

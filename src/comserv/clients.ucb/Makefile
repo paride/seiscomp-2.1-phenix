@@ -7,7 +7,7 @@ QDIR	= ../../qlib2
 QLIB    = $(QDIR)/libqlib2.a
 
 CC = g++
-CFLAGS = -O2 -fwritable-strings -fpack-struct -I$(CSINCL) -I$(QDIR) -DSOLARIS2
+CFLAGS = -O2 -fpack-struct -fpermissive -I$(CSINCL) -I$(QDIR) -DSOLARIS2
 LDFLAGS =
 LIBS =
 

@@ -591,7 +591,7 @@ Stream logs = make_stream(SystemLog());
 
 namespace PluginModule {
 
-RegisteredModule<Proto>* RegisteredModule<Proto>::registered = NULL;
+template<> RegisteredModule<Proto>* RegisteredModule<Proto>::registered = NULL;
 
 }
 

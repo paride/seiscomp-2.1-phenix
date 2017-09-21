@@ -29,7 +29,7 @@ typedef unsigned long      __g77_uinteger;
 typedef long long          __g77_longint;
 typedef unsigned long long __g77_ulongint;
 
-#include <g2c.h>
+#include <f2c.h>
 
 //*****************************************************************************
 // Redefinitions of FORTRAN symbols

@@ -1,6 +1,6 @@
 CC	= g++
 INCL	= ../include
-CFLAGS	= -O2 -fwritable-strings -fpack-struct -I$(INCL)
+CFLAGS	= -O2 -fpack-struct -I$(INCL)
 LDLIBS	=
 RANLIB	= /bin/true
 

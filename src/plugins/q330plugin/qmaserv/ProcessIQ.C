@@ -25,6 +25,7 @@
  *
  */
 #include <iostream>
+#include <string.h>
 #include <errno.h>
 #include "QmaDiag.h"
 #include "QmaTypes.h"

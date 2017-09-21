@@ -22,6 +22,7 @@
  *
  */
 #include <iostream>
+#include <string.h>
 
 #include "ProcessAG38.h"
 #include "QmaTypes.h"

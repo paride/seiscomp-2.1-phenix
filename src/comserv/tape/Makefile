@@ -9,7 +9,7 @@ TOOLSLIB    = $(TOOLSDIR)/ToolsLib.a
 DEFS 	= -DLINUX -DEJECT -DCLEAN_ANY_FILE
 CC		= gcc
 CXX     = g++
-CFLAGS	= -O2 -fwritable-strings -pedantic -Wall -I$(CSINCL) -I$(TOOLSDIR) $(DEFS)
+CFLAGS	= -O2 -I$(CSINCL) -I$(TOOLSDIR) $(DEFS)
 LDFLAGS	=
 
 SRCS	= Conf.c \

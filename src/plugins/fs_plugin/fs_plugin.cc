@@ -478,8 +478,8 @@ Stream logs = make_stream(SystemLog());
 
 namespace PluginModule {
 
-RegisteredModule<FS_Input>* RegisteredModule<FS_Input>::registered = NULL;
-RegisteredModule<FS_Decoder>* RegisteredModule<FS_Decoder>::registered = NULL;
+template<> RegisteredModule<FS_Input>* RegisteredModule<FS_Input>::registered = NULL;
+template<> RegisteredModule<FS_Decoder>* RegisteredModule<FS_Decoder>::registered = NULL;
 
 }
 

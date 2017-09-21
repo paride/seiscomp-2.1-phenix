@@ -27,6 +27,7 @@
 #include "Continuity.h"
 #include <fstream>
 #include <iostream>
+#include <string.h>
 
 Continuity::Continuity()
 {

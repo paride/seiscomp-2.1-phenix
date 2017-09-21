@@ -3,7 +3,7 @@ XML_INCL := $(shell xml2-config --cflags)
 OBJS = utils.o lex.ini.o conf_xml.o confbase.o
 
 CXX = g++
-CXXFLAGS = -Wall -O2
+CXXFLAGS = -Wall -O2 -fpermissive
 LEX = flex
 
 all: libslutils.a

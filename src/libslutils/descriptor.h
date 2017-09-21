@@ -15,6 +15,7 @@
 #define DESCRIPTOR_H
 
 #include <string>
+#include <strings.h>
 
 namespace Utilities_private {
 
