@@ -1,0 +1,525 @@
+#!/bin/bash
+
+SYSOP_HOME=`pwd`
+echo "SeisComP home directory: $SYSOP_HOME"
+echo ""
+
+KEYDIR="$SYSOP_HOME/key"
+if [ ! -d "$KEYDIR" ]; then
+    echo "No key directory found !! Please run make_key first - exit"
+    exit 1
+fi
+
+if [ ! -r "$SYSOP_HOME/bin/keyutils.sh" ]; then
+    echo "Cannot read `dirname $0`/keyutils.sh"
+    exit 1
+fi
+
+source "$SYSOP_HOME/bin/keyutils.sh"
+
+if [ ! -r "$SYSOP_HOME/templates/global.cfg" ]; then
+    echo "Cannot read $SYSOP_HOME/templates/global.cfg!"
+    exit 1
+fi
+
+if [ ! -r "$SYSOP_HOME/templates/keys.cfg" ]; then
+    echo "Cannot read $SYSOP_HOME/templates/keys.cfg!"
+    exit 1
+fi
+
+LoadConfig $SYSOP_HOME/templates/*.cfg
+
+if [ ! -r "$SYSOP_HOME/key/global" ]; then
+    echo "Cannot read $SYSOP_HOME/key/global!"
+    exit 1
+fi
+
+source $SYSOP_HOME/key/global
+
+VERSION="2.1"
+KEY_COMPATIBILITY="2.1"
+
+if echo " $KEY_COMPATIBILITY " | grep " $KEY_VERSION " > /dev/null; then :; else
+    echo "Incompatible version of key file $SYSOP_HOME/key/global ($KEY_VERSION)"
+    echo "Supported key file versions: $KEY_COMPATIBILITY"
+    exit 1
+fi
+
+STATLIST=$(for f in $KEYDIR/key_*; do echo ${f##*_}; done)
+NSTAT=`echo $STATLIST | wc -w`
+MULT=no
+if [ $NSTAT -gt 1 ]; then
+    MULT=yes
+fi
+
+QUANTERRA=no
+INSTALL_SPROC=no
+INSTALL_TRIGGER=no
+INSTALL_COMSERV=no
+INSTALL_SLQPLOT=no
+INSTALL_DATALOG=no
+INSTALL_SLARCHIVE=no
+
+SEEDLINK_PORT=18000
+DIGISERV_PORT=60999
+
+echo "Found" $NSTAT "key file(s) for the following station(s):" $STATLIST
+echo ""
+
+echo "Clean old config and operator directories..."
+rm -rf $SYSOP_HOME/config/*
+rm -rf $SYSOP_HOME/operator/*
+echo "...done"
+echo ""
+
+mkdir -p $SYSOP_HOME/config/store
+cd $SYSOP_HOME/config
+
+for STATID in $STATLIST; do
+
+    source $SYSOP_HOME/key/key_$STATID
+   
+    if echo " $KEY_COMPATIBILITY " | grep " $KEY_VERSION " > /dev/null; then
+        echo "Configuring station dependent parameters for station $STATID..."
+    else
+        echo "Incompatible version of key file $SYSOP_HOME/key/key_$STATID ($KEY_VERSION)"
+        echo "Supported key file versions: $KEY_COMPATIBILITY"
+        echo "Station $STATID not configured"
+        continue
+    fi
+
+    CHAIN_XML="chain.xml"
+    if [ "$DIGISERV" = yes ]; then
+        CHAIN_XML="chain_digiserv.xml"
+    fi    
+   
+    if [ "$PLUGIN" = chain ]; then
+        if [ "$DIAL" = yes ]; then
+            OutputFile $SYSOP_HOME/templates/chain_dialup_group.tpl > \
+              store/chain_dialup_"$STATID"
+        else
+            OutputFile $SYSOP_HOME/templates/chain_realtime_station.tpl > \
+              store/chain_realtime_"$SRCADDR":"$SRCPORT"_"$STATID"
+        fi
+
+        OutputFile $SYSOP_HOME/templates/seedlink_plugin_$PLUGIN.tpl > store/seedlink_plugin_$PLUGIN
+      
+    elif [ "$PLUGIN" = seisan -o "$PLUGIN" = comserv ]; then
+        OutputFile $SYSOP_HOME/templates/plugins.ini_$PLUGIN.tpl > store/plugins.ini_$PLUGIN
+        OutputFile $SYSOP_HOME/templates/seedlink_plugin_$PLUGIN.tpl > store/seedlink_plugin_$PLUGIN
+
+    elif [ "$PLUGIN" = reftek -o "$PLUGIN" = ewexport -o "$PLUGIN" = scream -o "$PLUGIN" = nrts -o "$PLUGIN" = naqs -o "$PLUGIN" = win ]; then
+        ext="$(ls store/plugins.ini_${PLUGIN}_* 2>/dev/null | wc -w)"
+        PLUGINID="$PLUGIN$((ext))"
+
+        if [ ! -f "store/plugins.ini_${PLUGIN}_${SRCADDR}:${SRCPORT}" ]; then
+            OutputFile $SYSOP_HOME/templates/plugins.ini_$PLUGIN.tpl > store/plugins.ini_${PLUGIN}_${SRCADDR}:${SRCPORT}
+            OutputFile $SYSOP_HOME/templates/seedlink_plugin_$PLUGIN.tpl > store/seedlink_plugin_${PLUGIN}_${SRCADDR}:${SRCPORT}
+        fi
+
+    elif [ "$PLUGIN" != none ]; then
+        OutputFile $SYSOP_HOME/templates/plugins.ini_$PLUGIN.tpl > store/plugins.ini_$STATID
+        OutputFile $SYSOP_HOME/templates/seedlink_plugin_$PLUGIN.tpl > store/seedlink_plugin_$STATID
+    fi
+
+    if [ "$PLUGIN" != none ]; then   # LOCALSOURCE = remote
+        OutputFile $SYSOP_HOME/templates/seedlink_station_$PLUGIN.tpl > store/seedlink_station_$STATID 
+    fi
+
+    if [ "$SPROC" != none ]; then
+        INSTALL_SPROC=yes
+    fi
+
+    if [ "$TRIG" = yes ]; then
+        INSTALL_TRIGGER=yes
+    fi
+    
+    if [ "$LOCALSOURCE" = seedlink ]; then
+        SRCADDR=127.0.0.1
+        SRCPORT="$SEEDLINK_PORT"
+    elif [ "$LOCALSOURCE" = digiserv ]; then
+        SRCADDR=127.0.0.1
+        SRCPORT="$DIGISERV_PORT"
+    fi
+    
+    if [ "$COMSERV" = yes ]; then
+        INSTALL_COMSERV=yes
+        COMSERV_SOURCE=seedlink
+
+        if [ "$DIGITYP" = "quanterra" ]; then
+            QUANTERRA=yes
+            COMSERV_SOURCE=comlink
+            OutputFile $SYSOP_HOME/templates/comserv_source_comlink.tpl > station_$STATID
+
+            if [ "$SEEDLINK" = yes ]; then
+                FixLines station_$STATID SLNK
+            else
+                RemoveLines station_$STATID SLNK
+            fi
+        else
+            OutputFile $SYSOP_HOME/templates/comserv_source_seedlink.tpl > station_$STATID
+            RemoveLines station_$STATID SLNK
+        fi
+
+        OutputFile $SYSOP_HOME/templates/comserv_station.tpl >> station_$STATID
+        OutputFile $SYSOP_HOME/templates/stations.ini.tpl > store/stations.ini_$STATID
+    
+#        OutputFile $SYSOP_HOME/templates/client_comserv.tpl >> clients_$STATID
+
+        ( mkdir -p $SYSOP_HOME/data/$STATID
+          cd $SYSOP_HOME/data/$STATID
+          ln -f -s $SYSOP_HOME/config/station_$STATID station.ini )
+
+        if [ "$DATALOG" = yes ]; then
+            INSTALL_DATALOG=yes
+            FixLines station_$STATID DLOG
+            OutputFile $SYSOP_HOME/templates/client_datalog.tpl >> clients_$STATID
+        else
+            RemoveLines station_$STATID DLOG
+        fi
+
+        if [ "$TAPE" = yes ]; then
+            FixLines station_$STATID TAPE
+        else
+            RemoveLines station_$STATID TAPE
+        fi
+    fi
+
+    if [ "$SLARCHIVE" = yes ]; then
+        INSTALL_SLARCHIVE=yes
+        OutputFile $SYSOP_HOME/templates/client_slarchive.tpl >> clients_$STATID
+    fi
+        
+    if [ "$PLOT" = yes ]; then
+        INSTALL_SLQPLOT=yes
+        OutputFile $SYSOP_HOME/templates/client_slqplot.tpl >> clients_$STATID
+    fi
+
+    OutputFile $SYSOP_HOME/templates/slqplot.ini.tpl > slqplot.ini
+    cp slqplot.ini slqplot_$STATID
+
+    OutputFile $SYSOP_HOME/templates/rc_station.tpl > rc_$STATID
+    
+    echo "...done"
+    echo ""
+
+done
+
+echo "Assembling config files..."
+
+cd $SYSOP_HOME/config
+
+if [ "$SEEDLINK" = yes ]; then
+    mkdir -p $SYSOP_HOME/seedlink
+
+    INI="seedlink"
+    CHAIN_XML="chain.xml"
+    LOCALPORT="$SEEDLINK_PORT"
+
+    if [ "$DIGISERV" = yes ]; then
+        mkdir -p $SYSOP_HOME/digiserv
+
+        SRCADDR=127.0.0.1
+        SRCPORT="$DIGISERV_PORT"
+        CHAIN_XML="chain_seedlink.xml"
+        OutputFile $SYSOP_HOME/templates/chain_head.tpl > $CHAIN_XML
+        OutputFile $SYSOP_HOME/templates/chain_realtime_group.tpl >> $CHAIN_XML
+        OutputFile $SYSOP_HOME/templates/seedlink_head.tpl > ${INI}.ini
+        OutputFile $SYSOP_HOME/templates/seedlink_plugin_chain.tpl >> ${INI}.ini
+
+        if [ "$INSTALL_TRIGGER" = yes ]; then
+            OutputFile $SYSOP_HOME/templates/trigger.ini_head.tpl > trigger.ini
+        fi
+
+        for STATID in $STATLIST; do
+            source $SYSOP_HOME/key/key_$STATID
+            (
+                unset SELECTORS
+                if [ "$TRIG" = yes ]; then
+                    OutputFile $SYSOP_HOME/templates/chain_realtime_station_trig.tpl >> $CHAIN_XML
+                    OutputFile $SYSOP_HOME/templates/trigger.ini_station.tpl >> trigger.ini
+                else
+                    OutputFile $SYSOP_HOME/templates/chain_realtime_station.tpl >> $CHAIN_XML
+                fi
+            )
+            OutputFile $SYSOP_HOME/templates/seedlink_station_chain.tpl >> ${INI}.ini
+        done
+        
+        echo "  </group>" >> $CHAIN_XML
+        echo "</chain>" >> $CHAIN_XML
+
+        if [ "$INSTALL_TRIGGER" = yes ]; then
+            FixLines $CHAIN_XML TRIG
+        else
+            RemoveLines $CHAIN_XML TRIG
+        fi
+
+        FixLines $CHAIN_XML SLNK
+        RemoveLines ${INI}.ini SPROC
+
+        INI="digiserv"
+        CHAIN_XML="chain_digiserv.xml"
+        LOCALPORT="$DIGISERV_PORT"
+    fi
+
+    OutputFile $SYSOP_HOME/templates/chain_head.tpl > $CHAIN_XML
+
+    if [ "`echo store/chain_realtime_*`" != "store/chain_realtime_*" ]; then
+        CHAIN_ADDR_LIST=$(for f in store/chain_realtime_*; do
+            echo $f | sed -e 's/^[^/]*\/chain_realtime_\([^_]*\).*/\1/g'
+        done | sort | uniq)
+
+        for addr in $CHAIN_ADDR_LIST; do
+            SRCADDR="$(echo $addr | cut -d ':' -f 1)"
+            SRCPORT="$(echo $addr | cut -d ':' -f 2)"
+
+            OutputFile $SYSOP_HOME/templates/chain_realtime_group.tpl >> $CHAIN_XML
+            cat store/chain_realtime_${addr}_* >> $CHAIN_XML
+            echo "  </group>" >> $CHAIN_XML
+        done
+    fi
+
+    if [ "`echo store/chain_dialup_*`" != "store/chain_dialup_*" ]; then
+        cat store/chain_dialup_* >> $CHAIN_XML
+    fi
+
+    echo "</chain>" >> $CHAIN_XML
+    if [ "$DIGISERV" = yes ]; then
+        RemoveLines $CHAIN_XML SLNK
+    else
+        FixLines $CHAIN_XML SLNK
+    fi
+
+    RemoveLines $CHAIN_XML TRIG
+
+    OutputFile $SYSOP_HOME/templates/${INI}_head.tpl > ${INI}.ini
+    cat store/seedlink_plugin_* >> ${INI}.ini
+    cat store/seedlink_station_* >> ${INI}.ini
+
+    if [ "$INSTALL_SPROC" = yes ]; then
+        FixLines ${INI}.ini SPROC
+    else
+        RemoveLines ${INI}.ini SPROC
+    fi
+fi
+
+mkdir -p $SYSOP_HOME/logs
+mkdir -p $SYSOP_HOME/operator
+mkdir -p $SYSOP_HOME/status
+mkdir -p $SYSOP_HOME/seq-backup
+
+if [ "$INSTALL_SLARCHIVE" = yes ]; then
+    mkdir -p $SYSOP_HOME/archive
+fi
+
+if [ "$INSTALL_COMSERV" = yes ]; then
+    mkdir -p $SYSOP_HOME/cmds
+    cat store/stations.ini_* > stations.ini 2>/dev/null
+    OutputFile $SYSOP_HOME/templates/network.ini.tpl > network.ini
+fi
+
+if [ "$INSTALL_SLQPLOT" = yes ]; then
+    mkdir -p $SYSOP_HOME/plotfiles
+fi
+
+if [ "$SEEDLINK" = yes ]; then
+    cat store/plugins.ini_* > plugins.ini 2>/dev/null
+fi
+
+cp $SYSOP_HOME/templates/filters.fir .
+cp $SYSOP_HOME/templates/slqplot.coef .
+cp $SYSOP_HOME/templates/streams.xml .
+cp $SYSOP_HOME/templates/scream2sl.map .
+cp $SYSOP_HOME/templates/win2sl.map .
+
+rm -rf $SYSOP_HOME/config/store
+
+echo "...done"
+echo ""
+
+echo "Installing Python modules..."
+
+OutputFile $SYSOP_HOME/templates/trigger_ext.py.tpl > $SYSOP_HOME/python/trigger_ext.py
+
+echo "...done"
+echo ""
+
+echo "Installing operator directory..."
+
+cd $SYSOP_HOME/operator
+
+OutputFile $SYSOP_HOME/templates/welcome.tpl > welcome
+OutputFile $SYSOP_HOME/templates/crontab_l.tpl > crontab_l.tmp
+OutputFile $SYSOP_HOME/templates/oprshell.tpl > oprshell.tmp
+
+if [ "$TERMPORT" = none ]; then
+    RemoveLines oprshell.tmp TERM
+else
+    FixLines oprshell.tmp TERM
+fi
+
+if [ "$TAPE" = none ]; then
+    RemoveLines oprshell.tmp TAPE
+else
+    FixLines oprshell.tmp TAPE
+fi
+
+if [ "$MULT" = no ]; then
+    RemoveLines oprshell.tmp MULT
+else
+    FixLines oprshell.tmp MULT
+fi
+
+# changes KS start
+if [ "$CDREC" = yes ]; then
+    FixLines oprshell.tmp CDREC
+    FixLines crontab_l.tmp CDREC
+else
+    RemoveLines oprshell.tmp CDREC
+    RemoveLines crontab_l.tmp CDREC
+fi
+
+if [ "$AUTOBOOT" = yes ]; then
+    FixLines crontab_l.tmp AUTOBOOT
+else
+    RemoveLines crontab_l.tmp AUTOBOOT
+fi
+# changes KS end
+
+if [ "$QUANTERRA" = yes -a -d "$SYSOP_HOME/templates/download" ]; then
+    FixLines oprshell.tmp DOWN
+    cp -r $SYSOP_HOME/templates/download .
+    echo "***Download directory installed - please check content!!***"
+    OutputFile $SYSOP_HOME/templates/DownLoad.tpl > DownLoad
+    chmod 755 DownLoad
+else
+    RemoveLines oprshell.tmp DOWN
+fi
+
+if [ "$INSTALL_SLQPLOT" = yes ]; then
+    FixLines crontab_l.tmp PLOT
+else
+    RemoveLines crontab_l.tmp PLOT
+fi
+
+if [ "$INSTALL_DATALOG" = yes ]; then
+    FixLines crontab_l.tmp DLOG
+else
+    RemoveLines crontab_l.tmp DLOG
+fi
+
+if [ "$DATALINKS" = yes ]; then
+    FixLines crontab_l.tmp LINKS
+else
+    RemoveLines crontab_l.tmp LINKS
+fi
+
+if [ $DRMHOME = none ]; then
+    RemoveLines oprshell.tmp DRM
+    RemoveLines crontab_l.tmp DRM
+else
+    FixLines oprshell.tmp DRM
+    FixLines crontab_l.tmp DRM
+fi
+
+RemoveLines oprshell.tmp NU
+
+mv crontab_l.tmp crontab_l
+mv oprshell.tmp oprshell
+chmod 755 oprshell
+
+echo "...done"
+echo ""
+
+echo "Adding modules to bin directory..."
+
+cd $SYSOP_HOME/bin
+
+OutputFile $SYSOP_HOME/templates/seiscomp_ctrl.tpl > seiscomp_ctrl.tmp
+
+if [ "$SEEDLINK" = yes ]; then
+    FixLines seiscomp_ctrl.tmp SLK
+else
+    RemoveLines seiscomp_ctrl.tmp SLK
+fi
+
+if [ "$DIGISERV" = yes ]; then
+    FixLines seiscomp_ctrl.tmp DGS
+else
+    RemoveLines seiscomp_ctrl.tmp DGS
+fi
+
+mv seiscomp_ctrl.tmp seiscomp_ctrl
+chmod 755 seiscomp_ctrl
+
+OutputFile $SYSOP_HOME/templates/check_disksize.tpl > check_disksize
+chmod 755 check_disksize
+
+OutputFile $SYSOP_HOME/templates/purge_datafiles.tpl > purge_datafiles
+chmod 755 purge_datafiles
+
+OutputFile $SYSOP_HOME/templates/backup_seqfiles.tpl > backup_seqfiles
+chmod 755 backup_seqfiles
+
+OutputFile $SYSOP_HOME/templates/make_root.tpl > make_root
+chmod 755 make_root
+
+if [ "$INSTALL_SLQPLOT" = yes ]; then
+    OutputFile $SYSOP_HOME/templates/slqplot2tek2gif.tpl > slqplot2tek2gif
+    chmod 755 slqplot2tek2gif
+
+    OutputFile $SYSOP_HOME/templates/update_plotfiles.tpl > update_plotfiles
+    chmod 755 update_plotfiles
+
+    OutputFile $SYSOP_HOME/templates/purge_plotfiles.tpl > purge_plotfiles
+    chmod 755 purge_plotfiles
+
+    OutputFile $SYSOP_HOME/templates/update_datalinks.tpl > update_datalinks
+    chmod 755 update_datalinks
+fi
+
+echo "...done"
+echo ""
+
+echo "Installing dot files for sysop..."
+
+cd $SYSOP_HOME
+OutputFile $SYSOP_HOME/templates/profile.tpl > .bash_profile
+# OutputFile $SYSOP_HOME/templates/Xinitrc.tpl > .xinitrc
+
+echo "...done"
+echo ""
+
+if [ $DRMHOME != none ]; then
+    echo "Install DRM directory..."
+
+    cd $DRMHOME/operator
+
+    OutputFile $SYSOP_HOME/templates/SetEnv.tpl > SetEnv
+    OutputFile $SYSOP_HOME/templates/SetEnv.rc.tpl > SetEnv.rc
+    OutputFile $SYSOP_HOME/templates/drm_welcome.tpl > drm_welcome
+
+    OutputFile $SYSOP_HOME/templates/drm_usrshell.tpl > drm_usrshell
+    chmod 755 drm_usrshell
+
+    OutputFile $SYSOP_HOME/templates/drm_cleantmp.tpl > drm_cleantmp
+    chmod 755 drm_cleantmp
+
+    cp $SYSOP_HOME/templates/drmshell .
+    chmod 755 drmshell
+
+    cp $SYSOP_HOME/templates/KermitDownLoad.scr .
+
+    echo "...done"
+    echo ""
+
+    echo "Install dot files for drm..."
+
+    cd $DRMHOME
+    OutputFile $SYSOP_HOME/templates/drm_cshrc.tpl > .cshrc
+#    cp $SYSOP_HOME/templates/Xdefaults .Xdefaults
+
+    echo "...done"
+    echo ""
+fi
+

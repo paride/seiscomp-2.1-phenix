@@ -1,0 +1,39 @@
+Server commands of Comserv edition 30 / SeedLink
+
+Commands marked with "+" are supported in SeedLink mode
+
+  Command              Description                                Privilege 
+  -------              -----------                                ---------
++ CSCM_ATTACH          Attach to server                               none
++ CSCM_DATA_BLK        Request combinations of data and blockettes    none
+  CSCM_LINK            Link format info                               none
+  CSCM_CAL             Calibrator info                                none
+  CSCM_DIGI            Digitizer info                                 none
+  CSCM_CHAN            Channel recording status                       none
+  CSCM_ULTRA           Misc flags and Comm Event names                none
++ CSCM_LINKSTAT        Accumulated link performance info              none
++ CSCM_CLIENTS         Get information about clients                0x0001
++ CSCM_UNBLOCK         Unblock packets associated with client N     0x0002
+  CSCM_RECONFIGURE     Link reconfigure request                     0x0004
++ CSCM_SUSPEND         Suspend link operation                       0x0008
++ CSCM_RESUME          Resume link operation                        0x0008
++ CSCM_CMD_ACK         Client acknowledges command finished           none
++ CSCM_TERMINATE       Terminate server                             0x0010
+  CSCM_SHELL           Send OS9 shell command                       0x0020
+  CSCM_VCO             Set VCO frequency                            0x0040
++ CSCM_LINKSET         Set server link parameters                   0x0080
+  CSCM_LINKADJ         Change link parameters                       0x0080
+  CSCM_MASS_RECENTER   Mass recentering                             0x0100
+  CSCM_CAL_START       Start calibration                            0x0200
+  CSCM_CAL_ABORT       Abort calibration                            0x0200
+  CSCM_DET_ENABLE      Detector on/off                              0x0400
+  CSCM_DET_CHANGE      Change detector parameters                   0x0400
+  CSCM_DET_REQUEST     Request detector parameters                    none
+  CSCM_REC_ENABLE      Change recording status                      0x0800
+  CSCM_COMM_EVENT      Set remote command mask                      0x1000
+  CSCM_DOWNLOAD        Start file download                          0x2000
+  CSCM_DOWNLOAD_ABORT  Abort download                               0x2000
+  CSCM_UPLOAD          Start file upload                            0x4000
+  CSCM_UPLOAD_ABORT    Abort upload                                 0x4000
+  CSCM_FLOOD_CTRL      Turn flooding on and off                       none
+

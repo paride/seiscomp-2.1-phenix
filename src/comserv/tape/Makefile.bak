@@ -1,0 +1,15 @@
+QDIR	= ../qlib
+BINDIR	= ../../bin
+CSDIR	= ..
+
+CC	= gcc 
+CFLAGS	= -g -I$(CSDIR)/include -DLINUX -I../include -I../file
+LIBS	= ../qlib/libqlib.a ../util/libutil.a ../file/ToolsLib.a -lm
+
+SRCS	= Main.c MainTape.c Conf.c
+OBJS	= $(SRCS:.c=.o)
+
+all:	datadump
+
+datadump:	$(OBJS)
+		$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)

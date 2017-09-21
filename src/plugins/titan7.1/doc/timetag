@@ -1,0 +1,104 @@
+
+                  DATATION DES DONNEES
+              DES SYSTEMES D'ACQUISITION TITAN
+
+La connaissance du temps UTC des donnees enregistrees par
+les systemes d'acquisition Titan est basee sur des impulsions
+de temps issues de recepteurs radio tels que DCF ou GPS.
+Les impulsions sont delivrees chaque minute par le recepteur 
+et le front avant est suppose coincider avec l'occurence de 
+la minute du temps UTC.
+Lors de la reception d'une impulsion de temps de duree correcte
+(250 millisecondes), par le systeme Titan, le temps interne 
+(ou temps systeme) est echantillonne et sa valeur memorisee, 
+puis enregitree dans les "trames heure" des donnees au format 
+Titan, sous le nom "heure du recalage horaire". 
+Les trames d'heure contiennent egalement le temps systeme des 
+echantillons de donnees sismiques recemment acquis.
+
+Le temps systeme est un temps relatif, qui differe du temps UTC
+d'une valeur maximale de +/- 20 secondes, dans de conditions
+normales. Ce temps derive lentement, avec un taux de l'ordre
+de 0.1 a 1 ppm, et l'on s'efforce de le re-initialiser le
+moins souvent possible, pour faciliter l'evaluation de
+sa derive a long terme.
+
+Le calcul du temps UTC des series temporelles des donnees sismiques 
+est effectue au moyen des variables et parametres suivants:
+
+- "delta_t" : decalage du temps interne par rapport au temps 
+  externe. C'est le complement a 60 (signe) du nombre de secondes 
+  du temps systeme, eventuellement corrige de la derive.
+- "tadc" : temps de propagation du convertisseur analogique-numerique
+- "tfilt" : temps de propagation du filtre du decimation, s'il y a
+  lieu
+
+Si "tsys" est le temps interne d'un echantillon, le temps UTC "Tutc" 
+de l'echantillon, appele egalement "temps corrige" est donne par
+
+    Tutc = tsys - delta - tadc - tfilt
+
+Le temps de propagagation du convertisseur depend du modele dont le
+le systeme d'acquisition est equipe:
+- Le convertisseur Crystal (Titan DAT) presente un retard de 29
+  echantillons.
+- Le convertisseur Analog Devices (Minititan) presente un retard
+  de 1,5 echantillons.
+
+Le temps de propagation des filtres de decimation ne s'applique
+qu'aux "voies secondaires", obtenues par filtrage FIR et decimation
+des "voies primaires", qui sont les voies de sortie des convertisseurs.
+Si "nc" est le nombre de coefficients du filtre de decimation,
+"i1" le pas d'echantillonnage des voies primaires et "i2"
+le pas d'echantillonnage des voies secondaires apres decimation, 
+le retard du filtre est donne par
+
+    tfilt = (nc - 1) / 2 * (i2 - i1)
+
+Il se trouve que la formule donnees par le constructeur permettant de 
+calculer la correction de temps a apporter pour les voies decimees
+conduit a des erreurs systematiques, qui deviennent evidentes pour
+les voies a faible frequence d'echantillonnage, mais que cependant
+les utilisateurs on mis quelques annees a decouvrir. Cette formule
+a ete corrigee au cours de l'annee 2000.
+
+Un terme de correction de temps supplementaire a ete introduit vers 1999,
+pour reparer le temps pour des systemes sychronises par DCF et qui
+pouvait presenter des erreurs de 1 ou plusieurs minutes.
+Ce terme est designe sous le nom de "extra_tcorr" ou encore "xtcorr"
+ou "xtc".
+La formule de correction du temps devient donc:
+
+    Tutc = tsys - delta + xtcorr - tadc - tfilt
+
+On remarquera les signes utilises: delta est une difference par rapport
+a une reference, et la correction est donc -delta. Le terme xtcorr
+est une correction a apporter et sonc signe n'est donc pas change.
+
+Lorsque l'on se refere aux pulses minutes externes servant de reference
+au temps temps systeme, on parle parfois abusivement de "synchro" ou 
+de "tops de synchro". Il faut se souvenir que le temps interne d'un
+systeme Titan n'est jamais synchronise, dans les conditions normales.
+Dans les conditions particulieres de mise sous tension du systeme,
+le temps est mis a l'heure de facon approchee au moyen d'une horloge 
+interne appelee "calendrier" dans la terminologie Agecodagis.
+Il s'agit donc bien d'une synchronization, mais que j'ai toujours
+estimee dangereuse car elle peut laisser penser a l'utilisateur
+presse ou mal informe que le systeme est a l'heure.
+
+J'ai preconise a plusieurs reprises (mais sans succes a ce jour)
+de faire evoluer le logiciel des systemes Titan pour que le temps 
+systeme demarre a 0 lors de la mise sous tension (temps Unix 
+1970.01.01-00:00:00) et qu'il soit simplement incremente par le pas 
+d'echantillonnage du digitizer.
+Si l'utilisateur n'envoie pas un pulse de temps externe valide, ou
+si le systeme s'arrete et redemarre pour diverses raisons et que
+la reference de temps externe n'est pas presente, la perte du temps
+UTC dans les donnees devient evidente lors du controle de la staion
+sur le terrain et au moment de la verification des donnees au labo.
+
+Cette solution presente en outre l'avantage de supprimer le circuit
+"calendrier" et les flags de type "Reboot" et "Mise a l'heure par
+time-out" difficiles a gerer dans la phase de controle de qualite
+des donnees.
+

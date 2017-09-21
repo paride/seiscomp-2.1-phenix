@@ -1,0 +1,1692 @@
+#!/usr/bin/perl
+use strict
+
+#################
+# handle signals
+#################
+
+$SIG{'INT'}  = 'handler';
+$SIG{'QUIT'} = 'handler';
+$SIG{'HUP'}  = 'handler';
+$SIG{'TSTP'} = 'handler';
+$SIG{'TERM'} = 'handler';
+$SIG{'CONT'} = 'handler';
+
+$SIG{'ALRM'} = 'alrmhandler';
+alarm(40000);
+
+#####################
+# SEED programs
+#####################
+
+$DRMHome = "$ENV{'DRM_HOME'}";
+
+$SEEDBin = "$ENV{'SEED_STUFF_BIN'}";
+
+if( ! -d "$SEEDBin" ) {
+    printf STDERR "\nThe enviroment variable SEED_STUFF_BIN is not set or directory [%s] does not exist !\n",
+    $SEEDBin;
+    exit(1);
+}
+$SEEDHome = "$ENV{'SEED_STUFF_HOME'}";
+if( ! -d "$SEEDHome" ) {
+    printf STDERR "\nThe enviroment variable SEED_STUFF_HOME is not set or directory [%s]
+ does not exist !\n",
+    $SEED_STUFF_HOME;
+    exit(1);
+}
+
+$ExtrFileProg  = "${SEEDBin}/extr_file";
+$voltimes      = "${SEEDBin}/voltimes.pl";
+$times         = "${SEEDBin}/times.pl";
+$LogAnalyzer   = "${SEEDBin}/LogAnalyzer";
+$kermit        = "${SEEDBin}/kermit";
+$timeout       = "${SEEDBin}/timeout";
+$JulDay       = "${SEEDBin}/julday.pl";
+
+#################################
+#          globals
+#################################
+$act = 1;
+#$act = 0;
+
+$AllData = 1;
+
+$TmpDRMDir   = "$ENV{'TMP_DIR'}";
+$ComservHome = "$ENV{'COMSERV_HOME'}";
+$OsType = "$ENV{'OSTYPE'}";
+
+if( ! -d "$ComservHome" ) {
+    printf STDERR "\nThe enviroment variable COMSERV_HOME is not set or directory [%s] does not exist !\n", $ComservHome;
+    exit(1);
+} else {
+   $ComservHome = $ENV{'COMSERV_HOME'};
+}
+ 
+$ComservBin  = "$ComservHome/bin";
+
+$DistHome = "$ENV{'DRM_HOME'}";
+$DRMHome = "$ENV{'DRM_HOME'}"; 
+$DataDir = "${DistHome}/../data";    
+
+($ENV{'DATA_DIR'}) = $DataDir =~ s/\n//g;
+
+
+###########################
+# Get data line for kermit
+###########################
+sub GetPort {
+
+    $Port = qx{ cat "${ComservHome}/config/LOCAL_DEFS" | grep PORT };
+    $Port = (split('=', $Port))[1];
+    chop( $Port );
+    return $Port;
+}
+
+########################################
+#       temp data directory 
+########################################
+$TmpDir  = "${TmpDRMDir}/summary";
+
+########################################
+# Make temp directory for logging stuff
+########################################
+sub MakeTempDir {
+
+#srand(time|$$);
+#$RandNo = int(rand(100000000)) + 1;
+#$ExtrDir = "${TmpDRMDir}/tmp.${RandNo}";
+$ExtrDir = "${TmpDRMDir}/tmp.$Initials";
+
+	if( ! -d $TmpDir ) {
+    	print "\nCreating logging directory $TmpDir ...\n";
+    	system( "mkdir -p $TmpDir" );
+#    	system( "chmod 1777 $TmpDir" );
+	}
+
+	if( ! -d $ExtrDir) {
+#    	print "\nCreating directory $ExtrDir ...\n";
+    	system( "mkdir -p $ExtrDir" );
+#    	system( "chmod 1777 $ExtrDir" );
+	}
+
+}
+
+################################
+# signal handler
+################################
+sub handler {   # 1st argument is signal name
+        local($sig) = @_;
+#        print "Caught a SIG$sig--ignoring\n";
+}
+
+################################
+# signal Interrupt handler
+################################
+sub alrmhandler {   # 1st argument is signal name
+        local($sig) = @_;
+		exit(-1);
+}
+
+################################
+#         main menu
+################################
+sub MainMenu {
+
+local($Screen);
+local($Answer);
+	do {	
+
+#	system "clear";
+    chop($Screen = <<'EOF');
+
+e       - Examine available data on disk
+s       - Select time window and extract data
+c       - Show content of temp. directory
+d       - Download selected data
+l(cdlst) - List log (calib, detector, message list, string, timing)
+v       - View selected data (tcp/ip only)
+m       - Mail message to station & network operators
+          (edit message with vi) 
+q       - Quit
+
+command --->
+EOF
+		print $Screen;
+		$Answer = "";
+		$Answer = substr(<STDIN>,0,2);
+		#if(! ($Answer =~ /\n/)) { $Answer = "q"; }
+		$Answer =~ y/\n//d;
+	} while( ! ($Answer =~ /[e[lLcCeEsSqQoOdDvVmMkK]{0,1}/) );
+	
+	return( $Answer );
+}
+
+################################
+# download menu
+################################
+sub DownLoadMenu {
+local($Screen);
+local($Answer);
+
+	do {
+		do {	
+
+#			system "clear";
+    		chop($Screen = <<'EOF');
+    
+f       - Download selected data via FTP (tcp/ip only)
+k       - Download selected data via kermit (modem dial-up only)
+q       - Quit
+
+command --->
+EOF
+			print $Screen;
+			$Answer = "";
+			$Answer = substr(<STDIN>,0,2);
+			if(! ($Answer =~ /\n/)) { $Answer = "q"; }
+			$Answer =~ y/\n//d;
+		} while( ! ($Answer =~ /[qQkKfF]/) );
+
+		DOWNDO: {
+			if($Answer =~ /^[fF]/) {
+				&FtpDownload;
+				last DOWNDO;
+			}
+			if($Answer =~ /^[kK]/) {
+				&KermitDownload;
+				last DOWNDO;
+			}
+ 		}
+   	} while( ! ($Answer  =~ /^[qQ]/) );   	
+}
+  
+################################
+# get a line from stdin
+################################
+sub GetLine {
+
+$GotLine = "";
+line:	while( 1 ) {
+		$InChar = getc(STDIN);
+		if( $InChar =~ /[\n]/ ) {
+			last line;
+		} else {
+			$GotLine .= $InChar;
+		}
+	}
+	return( $GotLine );
+}
+
+#################################
+# Extract data from summary file
+#################################
+
+sub ExtractData {
+local( $WithAll ) = @_;
+local( $SD1, $SD2, $ED1, $ED2);
+  
+#  system "clear";
+  @STRCMP = ( '([A-Z]{1,2})([A-Z]{1,1})' );
+  $StartDate = "00/00/00 00:00:00";
+  $EndingDate = "00/00/00 00:00:00";
+  
+  if( $StatCount > 1 ) {
+  	do {
+    	print "\nPlease select the station to get data from: $ShowStats\n";
+    	print "->";
+    	$StatToUse = uc &GetLine;
+    } while( !($ShowStats =~ /.*$StatToUse.*/) || length($StatToUse) < 2 );
+  } else {
+  	$StatToUse = $ShowStats;
+  	$StatToUse =~ y/ //d;
+  }
+  
+  print "\nExamine available data ...\n";
+  print "\n"; 
+
+  if( $WithAll == 1 ) { # select all data streams (not in use)
+    print "\nType ALL for all (BH?, LH?, VH?, UH?) data, <RETURN> to select data\n";
+    print "->";
+    $CmdLine = &GetLine;
+  } else { # select data streams with wildcards (default)
+    $CmdLine = "select";
+  } 
+
+  if( ($CmdLine =~ /all/ || $CmdLine =~ /ALL/) && $WithAll == 1 ) {
+    $AllData = 1;
+  } else {
+    $AllData = 0;
+  }
+
+  # list channels if 'all,ALL' not selected, (default)       
+  if( length($CmdLine) < 1 || !($CmdLine =~ /all/ || $CmdLine =~ /ALL/) ) {
+
+  	if( $SelectChanMode eq 1 ) {
+		@ToCatCHN = ();
+  		$StatToUse = qx{ echo $StatToUse | tr -s ' ' ' ' };
+  		chop($StatToUse);
+		$type = &get_type($StatToUse);
+		#print"StatToUse: $StatToUse $type\n";
+		if($type eq "II")
+		{
+		   @ChannelList = qx{ cd $DataDir/$StatToUse; find . -type d -print };
+		}else{
+		   $status = qx(cd $DataDir/$StatToUse; ls *);
+		   @liste = split(" ",$status);
+		   #print"@liste\n";
+		   
+		   $i = -1;
+		   foreach $element (@liste)
+		   {
+		      $chan = substr($element,index($element,".")+1,3);
+		      $j = -1;
+		      $found = 0;
+		      while ($j < $i)
+		      {
+		         $j++;
+		         if(@ChannelList[$j] eq "./$chan.D")
+		         {
+		            $found = 1;
+		         }
+		      }
+		      if($found == 0)
+		      {
+		         $i++;
+		         @ChannelList[$i] = "./$chan.D";
+		         #print"c: $i $element @ChannelList[$i]\n";
+		      }
+		   }
+		}
+		print "Available data channels:";
+		foreach $FChannel (sort @ChannelList) {
+			#print"$FChannel\n";
+			if( $FChannel =~ /.*[.][D].*/ ) {
+				chop($FChannel);
+				$Sta = substr($FChannel,2,3);
+				printf stdout " %s", $Sta;
+				push(@ToCatCHN,"$Sta");
+			}
+		}
+	} 
+
+	if( $SelectChanMode eq 1 ) {	
+	if( $SelectMode eq 1 ) { 
+    		print "\n\nSelect one channel [e.g. bhz]\n";
+	}else{
+    		print "\n\nSelect channel(s) (wildcards can be used)[[bhz] [l*] [vh?]...]\n";
+	}
+    	print "?";
+    	$SLine = &GetLine;
+    	$SLine =~ y/a-z/A-Z/;
+    	$ExtrWildcards = $SLine;
+    	if( length($SLine) ) {
+    		$SLine =~ s/\?/\./g;
+    		$SLine =~ s/\*/\.\*/g;
+        	@STRCMP = split(' ',$SLine);
+        
+    	} else {
+# select all available sterams
+#   		@STRCMP = ( "$CHKPATTERN" );
+# no input -> no data
+			return 1;
+    	}
+	} elsif( $SelectChanMode eq 2 ) {
+		 @STRCMP = ( "*" );
+	} else {
+		print "\nChannel mode mode mismatch !!\n";
+        return 1;
+	} 
+	
+	if( $SelectMode eq 1 ) { 
+    	do {
+        	#print "\nStarting date for scan (time not required):";
+        	#print "\n yy/mm/dd hh:mm:ss\n";
+        	#print "?";
+        	#$StartDate = &GetLine;
+        	#if( length($StartDate) < 1 ) {
+            	$StartDate = "00/00/00 00:00:00";
+            	break;
+        	#}
+    	} while ( length($StartDate) < 8 );
+    } elsif( $SelectMode eq 2 ) {
+    	do {
+        	print "\nStarting date for scan (time required):";
+        	print "\n yy/mm/dd hh:mm:ss\n";
+        	print "?";
+        	$StartDate = &GetLine;
+        	if( length($StartDate) < 1 ) {
+            	$StartDate = "00/00/00 00:00:00";
+            	return 1;
+        	}
+    	} while ( length($StartDate) < 8 );
+    } else {
+    	print "\nDate mode mismatch !!\n";
+        return 1;
+    }
+ 
+    do {
+	if( $SelectMode eq 2 ) { 
+        	print "\nEnding date for scan (time not required):";
+        	print "\n yy/mm/dd hh:mm:ss\n";
+        	print "?";
+        	$EndingDate = &GetLine;
+	}else{
+		$EndingDate = "";
+	}
+        if( length($EndingDate) < 1 ) {
+            $EndingDate = "00/00/00 00:00:00";
+            break;
+        }
+    } while ( length($EndingDate) < 8 );
+       
+  } else {
+    if( $WithAll != 1 ) {
+        ($SD1,$SD2,$ED1,$ED2,@StrCmp) = split(/\/\:.,-/,$CmdLine);
+        $StartDate  = "$SD1 $SD2";
+        $EndingDate = "$ED1 $ED2";
+
+#print "+$SD1 $SD2 $ED1 $ED2 @StrCmp+\n";
+    
+        @STRCMP = ();
+        foreach $Token (@StrCmp) {
+            $Token =~ y/a-z/A-Z/;
+            $Token =~ s/\?/\./g;
+            $Token =~ s/\*/\.\*/g;  
+            if( length($Token) eq 1 ) {
+                push(@STRCMP,$Token);
+            }
+		}
+     }    
+  }
+# print "- Begin:$StartDate End:$EndingDate Pattern:@STRCMP -";
+return 0;    
+}
+
+##############################
+# Calculate start and end date
+##############################
+sub StartEndDay {
+
+    $StartDay = $EndDay = "";
+    $StartYY = $StartMM = $StartDD = "";
+    $Starthh = $Startmm = $Startss = "00";
+    $EndYY = $EndMM = $EndDD = "";
+    $Endhh = $Endmm = $Endss = "00";
+    
+    #print "\n$StartDate - $EndingDate\n";
+    ($StartYY,$a,$StartMM,$a,$StartDD,$a,$Starthh,$a,$Startmm,$a,$Startss,@Junk) = $StartDate =~
+        /^(\d*)([^0-9]{0,1})(\d*)([^0-9]{0,1})(\d*)([^0-9]{0,1})(\d*)([^0-9]{0,1})(\d*)([^0-9]{0,1})(\d*)(.*)$/;
+    ($EndYY,  $a,$EndMM,  $a,$EndDD,  $a,$Endhh,  $a,$Endmm,  $a,$Endss,  @Junk) = $EndingDate =~
+        /^(\d*)([^0-9]{0,1})(\d*)([^0-9]{0,1})(\d*)([^0-9]{0,1})(\d*)([^0-9]{0,1})(\d*)([^0-9]{0,1})(\d*)(.*)$/;
+
+    	
+    if( length($StartMM) < 1 || length($StartDD) < 1 ) { 
+        $StartMM = "01"; 
+        $StartDD = "01"; 
+        $AllData = 1;
+    } else {
+        $AllData = 0;
+    }
+    if( length($EndMM) < 1 || length($EndDD) < 1 ) { 
+        $EndMM = ""; $EndDD = "";
+    } else {
+        $AllData = 0;
+    }
+    
+    if($StartYY > 50) {
+    $StartYYYY = "19$StartYY";
+    }else{
+    $StartYYYY = "20$StartYY";
+    }
+    if($EndYY > 50) {
+    $EndYYYY = "19$EndYY";
+    }else{
+    $EndYYYY = "20$EndYY";
+    }
+    
+    @ThisD  = qx{ $JulDay };
+    #print"@ThisD\n";
+    $ThisDay   = (split(' ',$ThisD[2]))[2];
+    $ThisYear   = (split(' ',$ThisD[2]))[3];
+ 
+    if( $StartMM =~ /00/ && $StartDD =~ /00/) {
+        $StartDay = 1;
+	$StartYear = 1950;
+    } else {
+        @StartD = qx{ $JulDay $StartMM $StartDD $StartYYYY};
+        $StartDay  = (split(' ',$StartD[2]))[2];
+        $StartYear = (split(' ',$StartD[2]))[3];
+    }
+    $StartDay = "$StartYear$StartDay";
+ 
+    if( $EndMM =~ /00/ && $EndDD =~ /00/ ) {
+        $EndDay = $ThisDay;
+	$EndDay = 366;
+	$EndYear = 2038;
+    } else {
+        @EndD   = qx{ $JulDay $EndMM $EndDD $EndYYYY};
+        $EndDay    = (split(' ',$EndD[2]))[2];
+        $EndYear   = (split(' ',$EndD[2]))[3];
+    }
+    $EndDay = "$EndYear$EndDay";
+   
+   
+    foreach $Parm (StartYY,StartMM,StartDD,Starthh,Startmm,Startss,EndYY,EndMM,EndDD,Endhh,Endmm,Endss) {
+        if( "${$Parm}" eq "" ) {
+            ${$Parm} = "00";
+        }
+    }
+
+    # Time window for extract file program       
+    $EndDayParam    = "${EndYY}${EndMM}${EndDD}${Endhh}${Endmm}${Endss}";
+    $StartDayParam  = "${StartYY}${StartMM}${StartDD}${Starthh}${Startmm}${Startss}";
+
+    # Start and end values for listing data available
+    $CmpEW = "${EndYY}${EndMM}${EndDD}${Endhh}${Endmm}${Endss}";
+    $CmpSW = "${StartYY}${StartMM}${StartDD}${Starthh}${Startmm}${Startss}";
+    $CmpEWy = "${EndYYYY}${EndMM}${EndDD}${Endhh}${Endmm}${Endss}";
+    $CmpSWy = "${StartYYYY}${StartMM}${StartDD}${Starthh}${Startmm}${Startss}";
+    $Cmp_EW = "${EndYY}${EndMM}${EndDD}_${Endhh}${Endmm}${Endss}";
+    $Cmp_SW = "${StartYY}${StartMM}${StartDD}_${Starthh}${Startmm}${Startss}";
+
+    #print"start-end: $StartDay $EndDay $StartDayParam $EndDayParam\n";
+
+
+}
+
+####################################
+# Get all stations available on drm
+####################################
+sub GetFileStats {    
+
+    @FileListStat = ();
+   
+#print "$ComservHome/config/station_\n";
+
+    foreach $Station (<$ComservHome/config/station_*>) {
+        $Stat = (split( 'station_', $Station))[1];
+        push(@FileListStat, "$Stat" );
+	#print"@FileListStat\n";
+    }
+}
+ 
+sub get_type {
+
+local $stat = $_[0];
+
+$type = "II";
+$st = qx( ls -l $ComservHome/config/station_$stat);
+$size = (split(" ",$st))[4];
+if($size == 2) {$type = "I";}
+
+return $type;
+} 
+
+####################################
+# Create check_file file list
+####################################
+sub CheckFileList {
+
+	&GetFileStats();
+	
+    print "\nCreating data list ...\n\n";
+    
+	foreach $IsStat ( @FileListStat ) {
+	#print"call get_type for $IsStat\n";
+	$type = &get_type($IsStat);
+    	#qx{ $VolTimes -l -d $DataDir -s $IsStat -b 700101000000 -e 380101000000 -f '*.D/*${IsStat}*' >${TmpDir}/check_times_${IsStat} };
+        #print"$voltimes -l $DataDir $IsStat "*" $type 700101000000 380101000000 >${TmpDir}/check_times_${IsStat}\n";
+        qx{ $voltimes -l $DataDir $IsStat "*" $type 700101000000 380101000000 >${TmpDir}/check_times_${IsStat} };
+    }
+}
+################################
+# Create check_file_active file list
+################################
+sub CheckFileListActive {
+
+    #&GetFileStats();
+
+	#foreach $IsStat ( @FileListStat ) {
+		#qx{ $VolTimes -l -d $DataDir -s $IsStat -b 700101000000 -e 380101000000 -f '*.D/*active' >${TmpDir}/check_times_active_${IsStat} };
+	#}
+	$type = &get_type($StatToUse);
+	print "\nScan data files for station $StatToUse\n";
+	#print"$voltimes -l $DataDir $StatToUse '*/active' $type 700101000000 380101000000  >${TmpDir}/check_times_active_$StatToUse\n";
+	qx{ $voltimes -l $DataDir $StatToUse '*/active' $type 700101000000 380101000000  >${TmpDir}/check_times_active_$StatToUse };
+}
+#########################
+# Run check_file program
+#########################
+
+sub RunCheckFileActive {
+local( $Line );
+local( @OutList = () );
+local( @ReturnList = () );
+
+
+	$ListFile = "${TmpDir}/check_times_active_${StatToUse}";
+    if( -f "$ListFile" && -s "$ListFile" ) { 
+    	@OutList = (); 
+    	@TimesActive = qx( cat $ListFile );
+	#print"@TimesActive\n";
+    	foreach $Line (@TimesActive) {
+			if( CheckForDays( "$Line", "TRUE" ) ) {
+                	push(@OutList, "$Line");
+            }
+        }
+        @ReturnList = (@ReturnList,sort(@OutList));
+    }            
+	return(@ReturnList); 
+}
+
+sub RunCheckFile {
+local( $File );
+
+	system("/bin/cp /dev/null ${TmpDir}/check_times_u" );
+	@ListFiles = <${TmpDir}/check_times_[A-Z][A-Z]*>;
+
+	foreach $File ( @ListFiles ) {        
+    	qx( cat $File >> ${TmpDir}/check_times_u);
+    }         
+}
+
+##################################
+# Show times for not active files
+##################################
+sub ShowTimes {
+local(@NotActiveList = () );
+local(@ActiveList    = (), $linecount = 0 );
+
+#@O = qx{ date }; print "\n-1 @O";
+    
+    print "\n Stat  Chan                   Inclusive Dates";
+    print "\n---------------------------------------------------------------------\n";
+    
+    #if( -f "${TmpDir}/check_times" &&
+        #-s "${TmpDir}/check_times" ) {
+    	#@Times = qx( cat ${TmpDir}/check_times );
+    if( -f "${TmpDir}/check_times_$StatToUse" &&
+        -s "${TmpDir}/check_times_$StatToUse" ) {
+    	@Times = qx( cat ${TmpDir}/check_times_$StatToUse );
+	#print"Times $StatToUse *$CHKPATTERN.* :\n @Times\n";
+    	foreach $Line (@Times) {
+    		if( $Line =~ /.*$StatToUse.*/ && $Line =~ /.*$CHKPATTERN.*/ ) {
+        		#print"$Line\n";
+			if( &CheckForDays("$Line", "FALSE" ) ) {
+            		push(@NotActiveList,"$Line");
+					print "$Line";
+ 					$linecount++;
+ 					if( !($linecount % 20 ) ) {
+    					print "hit <RETURN> to continue ...";
+    					&GetLine;
+    				}
+        		}
+        	}
+    	}
+    }
+# no active list for drm_ondb
+
+
+#@O = qx{ date }; print "\n-1 @O";    
+
+  if($act == 1)
+  {
+    @ActiveList = &RunCheckFileActive;
+    foreach $PrintLine (sort(@ActiveList)){		
+    	if( $PrintLine =~ /.*$StatToUse.*/ && $PrintLine =~ /.*$CHKPATTERN.*/ ) {
+    		print $PrintLine;
+    		$linecount++;
+    		if( !($linecount % 20 ) ) {
+    			print "hit <RETURN> to continue ...";
+    			&GetLine;
+    		}
+    	}
+    }
+  }
+#@O = qx{ date }; print "\n-1 @O";
+return;
+}
+
+##################################
+# Check list file for time window
+##################################
+ sub CheckForDays {
+ local( $Line, $IsActive ) = @_;
+
+    #print "$Line**$IsActive* \n ";
+
+    # split the output of the SEED check program
+    @list = split(" ",$Line);
+    $CHN    = @list[1];
+    #$CHN    = substr($Line,7,3);
+    ($Line) =~ tr/A-Za-z\ //d;
+    $SWinDD = substr($Line,0,2);
+    $SWinMM = substr($Line,3,2);
+    $SWinYY = substr($Line,6,4);
+    $SWinYYt = substr($Line,8,2);
+    $SWinhh = substr($Line,10,2);
+    $SWinmm = substr($Line,13,2);
+    $SWinss = substr($Line,16,2);
+    
+    $EWinDD = substr($Line,24,2);
+    $EWinMM = substr($Line,27,2);
+    $EWinYY = substr($Line,30,4);
+    $EWinYYt = substr($Line,32,2);
+    $EWinhh = substr($Line,34,2);
+    $EWinmm = substr($Line,37,2);
+    $EWinss = substr($Line,40,2);
+    
+    
+
+#print  "Start $SWinDD $SWinMM $SWinYY $SWinhh $SWinmm $SWinss -";
+#print  "End   $EWinDD $EWinMM $EWinYY $EWinhh $EWinmm $EWinss \n";    
+  
+	if( $SWinMM == 0 || $SWinDD == 0 || $EWinMM == 0 || $EWinDD == 0 ) {
+		return(0);
+	}
+
+	
+    @SWinD   = qx{ $JulDay $SWinMM $SWinDD $SWinYY};
+    @EWinD   = qx{ $JulDay $EWinMM $EWinDD $EWinYY};
+    
+#print @SWinD;
+#print @EWinD;
+    
+    $SWinDay   = (split(' ',$SWinD[2]))[2];
+    $SWinYear  = (split(' ',$SWinD[2]))[3];
+    $SWinDay   = "$SWinYear$SWinDay";
+    $EWinDay   = (split(' ',$EWinD[2]))[2];  
+    $EWinYear  = (split(' ',$EWinD[2]))[3];  
+    $EWinDay   = "$EWinYear$EWinDay";
+    
+#print "StartDay $StartDay EndDay  $EndDay\n";
+#print "SWinDay  $SWinDay  EWinDay $EWinDay\n";
+
+    
+    # Check if we have the correct day
+    if( ($StartDay <= $SWinDay && $EndDay >= $SWinDay) ||
+        ($StartDay <= $EWinDay && $EndDay >= $EWinDay) ||
+                                               ($AllData) ) {
+        #Check if we have the correct time window
+        #$ChkSB = "${EWinYYt}${EWinMM}${EWinDD}${EWinhh}${EWinmm}${EWinss}";
+        #$ChkEW = "${SWinYYt}${SWinMM}${SWinDD}${SWinhh}${SWinmm}${SWinss}";
+        $ChkSB = "${EWinYear}${EWinMM}${EWinDD}${EWinhh}${EWinmm}${EWinss}";
+        $ChkEW = "${SWinYear}${SWinMM}${SWinDD}${SWinhh}${SWinmm}${SWinss}";
+	#print"$CmpSWy <= $ChkSB || $CmpEWy >= $ChkEW \n";
+        if( $CmpSWy <= $ChkSB || $CmpEWy >= $ChkEW ) { 
+            $B = "${SWinYYt}${SWinMM}${SWinDD}_${SWinhh}${SWinmm}${SWinss}";
+            $E = "${EWinYYt}${EWinMM}${EWinDD}_${EWinhh}${EWinmm}${EWinss}";
+            # look if the channel matches
+            #print "CHANNEL $CHN  $B -- $E\n";
+            if( ! CheckChan($CHN) ) { return 0; }
+            $SearchCount++;
+            if( $IsActive =~ /TRUE(.*)/ ) {
+                push( @TimesAndDates, "$CHN active $B $E" );
+            } else {
+                push( @TimesAndDates, "$CHN $SWinDay $B $E" );
+            }
+            return 1;
+        }
+        return 0;
+    } else {
+        return 0;
+    }       
+ }        		 
+##############################
+# Check channel and component
+##############################
+sub CheckChan {
+local( $STRCHN ) = @_;
+local( $Pattern,$Stream,$Compo );
+
+    foreach $StreamCompo (@STRCMP) {
+        $Pattern = "$StreamCompo";
+#print $Pattern;
+        if( $STRCHN =~ /$Pattern/ )  {      
+#print "FOUND\n";
+          	return 1;
+      	}
+    }
+    return 0;
+}
+
+#######################
+# echo extr_file files
+#######################
+sub ExtrFiles {
+local( $FName,$TimesR,$Day,$Chan,$Time,$BTime,$ETime,$Line );
+local( $count,$OutLine,$MoveName );
+
+    @FileList = ();
+    @FilePath = ();
+    $count = 0;
+    
+	# create command line for extr_file program #
+
+	#$Cmd = "$VolTimes ";
+	
+	#if( $CmpSW != 0 ) { $Cmd .= " -b $CmpSW"; }
+	#if( $CmpEW != 0 ) { $Cmd .= " -e $CmpEW"; }
+#print "$CmpSW $CmpEW \n";
+		
+	#$Cmd .= " -o $ExtrDir -d $DataDir -s $StatToUse ";
+#print "#Full_CMD $Cmd\n";
+#print "\nW -$ExtrWildcard-";
+	foreach $wc (split(' ', $ExtrWildcards) ) {
+		#$Cmd .= " -f \"*$wc*\"";
+		$type = &get_type($StatToUse);
+		$Cmd = "$voltimes -e $DataDir $StatToUse \"$wc\" $type $CmpSW $CmpEW";
+#print "#Split_CMD $Cmd\n";
+	}
+
+
+	@ExtrCalls = qx{ $Cmd };
+	#$ll = length(@ExtrCalls[0]);
+#print "$ll $#ExtrCalls @ExtrCalls\n";
+	
+	if($act == 1)
+	#if($ll == 0)
+	{
+           $Cmd2 = "$voltimes -e $DataDir $StatToUse \"$ExtrWildcards/active\" $type $CmpSW $CmpEW";
+#print "#Split_CMD2 $Cmd2\n";
+           @ExtrCalls2 = qx{ $Cmd2 };
+	   #$ll2 = length(@ExtrCalls2[0]);
+#print "2: $ll2 $#ExtrCalls2 @ExtrCalls2\n";
+	}
+	
+	$i = $#ExtrCalls;
+	foreach $elem (@ExtrCalls2) {
+		$i++;
+		@ExtrCalls[$i] = $elem;
+	}
+	
+        print "Extract MiniSEED files from cont. data base\n\n";
+	foreach $SingleCmd (@ExtrCalls) {
+		chomp $SingleCmd;
+#print "#EXTRACT_CMD $SingleCmd -o $ExtrDir \n";
+		#@OutPut = qx{ $SEEDBin/$SingleCmd };	 
+		@OutPut = qx{ $SEEDBin/$SingleCmd -o $ExtrDir };
+
+    	$OutLine = 0;
+        # print out greped recorded line from output
+        foreach $Line (@OutPut) {
+        	if( $Line =~ /(.*)records written(.*)/ ) {
+        		$OutLine = 1;
+        		$count++;
+            	print "$Line\n";
+            }
+        }
+        # there were no data for this window in the SEED file
+#        if( $OutLine == 0 ) { print "**  NO DATA EXTRACTED  **\n\n"; }
+    }
+
+    # we have found nothing to extract
+    if( $count == 0 ) {
+        printf( STDOUT "\n** NO DATA FOUND TO EXTRACT **\n" );
+    } else {
+    	#foreach $ChannelExt ( @ToCatCHN ) {
+    	#	if( length($ChannelExt) > 2 ) {
+    	#		$CatList = qx{ cd $ExtrDir;find . -type f -name \\*${ChannelExt} -print |
+    	#		sort };
+    			
+    	#		$CatList =~ s/\n/ /g;
+    	#		if($CatList =~ /.*$ChannelExt.*/ ) {
+    	#			$NewName = (split(' ',$CatList))[0];
+    	#			$MoveName = $NewName;
+    	#			$NewName = "ALL_$ChannelExt_SEED";
+	#			#print"cd $ExtrDir; cat $CatList > $NewName\n";
+    	#			system( "cd $ExtrDir; cat $CatList > $NewName" );
+	#			#print"cd $ExtrDir; /bin/rm $CatList\n";
+    	#			system( "cd $ExtrDir; /bin/rm $CatList ");
+	#			#print"cd $ExtrDir; /bin/mv $NewName $MoveName\n";
+    	#			system( "cd $ExtrDir; /bin/mv $NewName $MoveName" );
+#print "\ncd $ExtrDir; cat $CatList > $NewName; ";
+	#			}
+    	#	}
+    	#}
+    } 
+}
+
+###########################
+# list detection log
+###########################
+sub ListLog {
+(local $ListType = $_[0]);
+(local $Cmd,$AddCmd,$AddCmd2 );
+
+print "\nListing found $ListType records ...\n";
+	$AddCmd = "";
+	if( $CmpSW != 0 ) { 
+		$yrad = "20";
+		if(substr($CmpSW,0,2) > 50) {$yrad = "19";}
+		$AddCmd .= " -b \"$yrad$CmpSW\""; 
+	} else { 
+		$AddCmd .= " -b \"19700101000000\"";
+	}
+	
+	if( $CmpEW != 0 ) { 
+		$yrad = "20";
+		if(substr($CmpSW,0,2) > 50) {$yrad = "19";}
+		$AddCmd .= " -e \"$yrad$CmpEW\""; 
+	} else {
+		$AddCmd .= " -e \"20380101000000\"";
+	}
+
+
+	if( $ListType =~ /DETECTION/ ) {
+#		$Cmd = "$DetectTimes ";
+#		$Cmd .= " -d $DataDir -s $StatToUse ";
+#		$Cmd .= " -f \"*.E/*\"";
+		$Cmd = "$LogAnalyzer -p";
+		$Cmd .= " -d $DataDir/$StatToUse/LOG.L ";
+		$Cmd .= " -f \"*\"";
+		#print "#Command >$Cmd $AddCmd<\n";
+		system( "$Cmd $AddCmd" );
+	}
+	if( $ListType =~ /CALIBRATION/ ) {
+#		$Cmd = "$DRMHome/CalTimes ";
+#		$Cmd .= " -d $DataDir -s $StatToUse ";
+##		foreach $wc (split(' ', $ExtrWildcards) ) {
+##			$Cmd .= " -f \"*.C/*$wc*\"";
+##		}
+#		$Cmd .= " -f \"*.C/*\"";
+		$Cmd = "$LogAnalyzer -l \"CALIB\"";
+		$Cmd .= " -d $DataDir/$StatToUse/LOG.L ";
+		$Cmd .= " -f \"*\"";
+		#print "#Command >$Cmd $AddCmd<\n";
+		system( "$Cmd $AddCmd" );
+	}
+	if( $ListType =~ /STRING/ ) {
+		$Cmd = "$LogAnalyzer -l \"$string\"";
+		$Cmd .= " -d $DataDir/$StatToUse/LOG.L ";
+		$Cmd .= " -f \"*\"";
+		#print "#Command >$Cmd $AddCmd<\n";
+		system( "$Cmd $AddCmd" );
+	}
+	if( $ListType =~ /TIMING/ ) {
+#		$Cmd = "$TimeTimes ";
+#		$Cmd .= " -d $DataDir -s $StatToUse ";
+#		$Cmd .= " -f \"*.T/*\"";
+		$Cmd = "$LogAnalyzer -c";
+		$Cmd .= " -d $DataDir/$StatToUse/LOG.L ";
+		$Cmd .= " -f \"*\"";
+		#print "#Command >$Cmd $AddCmd<\n";
+		system( "$Cmd $AddCmd" );
+	}
+	if( $ListType =~ /LOG/ ) {
+#		$Cmd = "$LogTimes ";
+#		$Cmd .= " -d $DataDir -s $StatToUse ";
+#		$Cmd .= " -f \"*.L/*\"";
+		$AddCmd2 = "";
+		$Cmd = "$LogAnalyzer -l \" \"";
+		$Cmd .= " -d $DataDir/$StatToUse/LOG.L ";
+		$Cmd .= " -f \"*\"";
+#		foreach $wc (split(' ', $ExtrWildcards) ) {
+#			$wc =~ s/\?/\./g;
+#			$wc =~ s/\*/\.\*/g;
+#			$AddCmd .= " | egrep -i -E -e \"$wc\" ";			
+#		}
+		#print "#Command >$Cmd $AddCmd $AddCmd2<\n";
+		system( "$Cmd $AddCmd $AddCmd2" );
+	}
+	print "\n\n";
+}
+
+################################
+# list temp directory
+################################
+sub ListTmpDir {
+local( @FtpDelList = () );
+
+    #@FtpFilesLs = qx{ find ${ExtrDir} -printf "%s %f\n" | grep -v tmp };
+    @FtpFilesLs = qx{ cd ${ExtrDir}; ls -s -1 | grep -v total};
+#print "@FtpFilesLs";
+
+    printf( STDOUT "\nPresent content of your temp. directory ${ExtrDir} in 512 byte records\n\n" );
+    printf( STDOUT "no  size      file\n" );
+    printf( STDOUT "----------------------------\n" );
+
+    $count = 0;
+    foreach $FileName (@FtpFilesLs) {
+        $count++;
+        printf( STDOUT "$count $FileName" );
+    }
+
+    if( $count == 0 ) {
+        printf( STDOUT "\n****NO FILES FOUND ****\n" );
+        return;
+    }
+}
+
+###########################
+# FTP delete files on disk
+###########################
+sub FtpDeleteFiles {
+(local  @FtpDelList = @_ );
+(local  $DelFile,$FileName,$count,$ToDel,@DelList = () );
+
+	do{ 
+		print @FtpDelList;
+REDOIT:
+		printf( STDOUT "\nDo you want to transfer all files [y]/n/q=exit ?" );		
+		$FILE_NO = GetLine;
+		if( length($FILE_NO) eq 0 )     { $FILE_NO="Y"; }
+		if( !($FILE_NO =~ /[yYnNqQ]/) ) { goto REDOIT; } 
+		if( length($FILE_NO) eq 0 )     { $FILE_NO="Y"; }
+		if( $FILE_NO=~ /[qQ]/ )         { $DoQuit = 1; return; }
+		if( $FILE_NO=~ /[nN]/ ) {
+		        printf( STDOUT "\nPlease select number(s) of file(s) to delete (separate by blanks):" );	
+			$FILE_NO = GetLine;
+		}
+		printf( STDOUT "\n" );
+		
+
+		if( $FILE_NO =~ /[0-9 ]*/ && !($FILE_NO =~ /[yY]/) ) {
+			@DelList = split(' ',$FILE_NO);
+			foreach $ToDel ( @DelList ) {
+				chop(@FtpDelList[$ToDel-1]);
+				($a,$b,$DelFile) = split(' ',@FtpDelList[$ToDel-1]);
+				system( "/bin/rm ${ExtrDir}/$DelFile" );
+    		}
+    		@FtpDelList = @FtpDelL = ();
+			#@FtpDelL = qx{ cd ${ExtrDir}; find . -type f -ls | tr -s ' ' ' ' | cut -d " " -f 7,11 | sed -e "s%./%%" };
+			#@FtpDelL = qx{ cd ${ExtrDir}; find . -type f -ls | tr -s ' ' ' ' | cut -d " " -f $r7_11 | sed -e "s%./%%" };
+			@FtpDelL = qx{ cd ${ExtrDir}; ls -l};
+			$count = 0;
+			#print"@FtpDelL\n";
+    		#foreach $FileName (@FtpDelL) {        
+     		foreach $element (@FtpDelL) {        
+			@list = split(' ',$element);
+			$Size = @list[4];
+			$FileName = @list[8];
+			if($Size ne '')
+			{
+        		   $count++;
+        		   push( @FtpDelList, "$count $Size $FileName\n" ); 
+			}
+    		}
+		}	
+	} while ( ! ($FILE_NO =~ /[yY]/) );
+	
+	printf( STDOUT "\n\n" );
+	return( @FtpDelList );
+}
+
+###################################
+# Kermit transfer of selected data
+###################################
+sub KermitDownload {
+local( $SendList = "", @KermitDelList = () );
+$DoQuit = 0;
+
+    #@KermitFilesLs = qx{ cd ${ExtrDir}; find . -type f -ls | tr -s ' ' ' ' | cut -d " " -f 7,11 | sed -e "s%./%%" };
+    #@KermitFilesLs = qx{ cd ${ExtrDir}; find . -type f -ls | tr -s ' ' ' ' | cut -d " " -f $r7_11 | sed -e "s%./%%" };
+    @KermitFilesLs = qx{ cd ${ExtrDir}; ls -s -1 | grep -v total };
+        
+    printf( STDOUT "\npreparing files for download ...\n\n" );
+    printf( STDOUT "no  size      file\n" );
+    printf( STDOUT "----------------------------\n" );
+    
+    $count = 0;
+    foreach $FileName (@KermitFilesLs) {
+        $count++;
+        printf( STDOUT "$count $FileName" );
+    }
+#    foreach $element (@KermitFilesLs) {
+#	@list = split(' ',$element);
+#	$Size = @list[4];
+#	$FileName = @list[8];
+#	if($Size ne '')
+#	{        
+#           $count++;
+#           push( @KermitDelList, "$count $Size $FileName\n" );
+#	} 
+#    }
+    
+    if( $count == 0 ) {
+        printf( STDOUT "\n****NO FILES FOUND ****\n" );
+        return;
+    } else {
+    	@KermitDelList = FtpDeleteFiles(@KermitDelList);
+	if( $DoQuit eq 1 ) { return; }  
+    }
+          
+    printf( STDOUT "----------------------------\n" );
+
+    system( "/bin/cp /dev/null $ExtrDir/DownFiles.kermit" );
+    foreach $Item (@KermitDelList) {
+	$Item = (split(' ',$Item))[2];
+    	system( "echo \"add send-list ${Item} binary\" >> $ExtrDir/DownFiles.kermit");
+    }
+
+    system ("(cd $ExtrDir; $timeout -20000 $kermit -y $DRMHome/KermitDownLoad.scr )");
+    system ("/bin/rm $ExtrDir/DownFiles.kermit" );
+    return;
+    	 
+
+}
+
+#################################
+# FTP transfer of extracted data
+#################################
+sub FtpDownload {
+local( @FtpDelList = () );
+$DoQuit = 0; # exit from download
+
+    #@FtpFilesLs = qx{ cd ${ExtrDir}; find . -type f -ls | tr -s ' ' ' ' | cut -d " " -f 7,11 | sed -e "s%./%%" };
+    #@FtpFilesLs = qx{ cd ${ExtrDir}; find . -type f -ls | tr -s ' ' ' ' | cut -d " " -f $r7_11 | sed -e "s%./%%" };
+    @FtpFilesLs = qx{ cd ${ExtrDir}; ls -s -1 | grep -v total };
+    #print"@FtpFilesLs\n\n";
+        
+    printf( STDOUT "\npreparing files for download ...\n\n" );
+    printf( STDOUT "no  size      file\n" );
+    printf( STDOUT "----------------------------\n" );
+    
+    $count = 0;
+    foreach $FileName (@FtpFilesLs) {
+        $count++;
+        printf( STDOUT "$count $FileName" );
+    }
+#    foreach $element (@FtpFilesLs) { 
+#	@list = split(' ',$element);
+#	$Size = @list[4];
+#	$FileName = @list[8];
+#	if($Size ne '')
+#	{       
+#           $count++;
+#           push( @FtpDelList, "$count $Size $FileName\n" );
+#	} 
+#    }
+    
+    if( $count == 0 ) {
+        printf( STDOUT "\n****NO FILES FOUND ****\n" );
+        return;
+    } else {
+    	@FtpDelList = FtpDeleteFiles(@FtpDelList);
+	if( $DoQuit eq 1 ) { return; } 
+    }
+    
+
+    printf( STDOUT "Do you want to assemble the MiniSEED files to FullSEED [[y]/n]" );
+    $ANS = GetLine;
+    $time = substr(qx{ date '+%h%d_%H%M%S'},0,12);
+    chomp $time;
+    if( "$ANS" ne "n" && "$ANS" ne "N" ) {
+        print "\nAssemble FullSEED volume from MiniSEED files\n";
+        $Cmd = "$SEEDBin/copy_seed  -h a -i $ExtrDir -o $ExtrDir/xxx -b 700101_000000 -e 380101_000000";
+
+        #print "$Cmd\n";
+	$ftpfile = "$ExtrDir/drm\_$time.seed";
+        @OutPut = qx{ mkdir $ExtrDir/xxx; $Cmd; mv $ExtrDir/xxx/*SEED $ftpfile; rm -R $ExtrDir/xxx };
+        #print "\n@OutPut\n";
+    }else{
+        print "\nAssemble the MiniSEED files into a tar volume\n\n";
+ 	$ftpfile = "$ExtrDir/drm\_$time.tar";
+        qx{ cd $ExtrDir; tar -cvf x.tar *; mv x.tar $ftpfile};
+    }
+    
+    printf( STDOUT "----------------------------\n" );
+    do {
+        printf( STDOUT "Enter your hostname or IP-number for download.\n" );
+        printf( STDOUT "host.domainname|xxx.xxx.xxx.xxx  or q to quit.\n" );
+        printf( STDOUT "?" );
+        $IP_HOST = GetLine;
+        if( "$IP_HOST" eq "q" || "$IP_HOST" eq "Q" ) { return; }   
+    } while ( length($IP_HOST) < 3 );
+    print "\n";
+    do {
+        printf( STDOUT "Enter your login name for your local account.\n" );
+        printf( STDOUT "loginname or q to quit.\n" );
+        printf( STDOUT "?" );
+        $USER = GetLine;
+        if( "$USER" eq "q" || "$USER" eq "Q" ) { return; }   
+    } while ( length($USER) < 1 );
+    
+    printf( STDOUT "\nEnter the path where the data should go on your local machine\n" );
+    printf( STDOUT "Type ENTER for your home directory.\n" );
+    printf( STDOUT "?" ); 
+    $LocalPWD = GetLine;
+    printf( STDOUT "\n" );
+  
+    do {
+        printf( STDOUT "\nDo you want to download the data [[y]/n]" );
+        $ANS = GetLine;
+        if( "$ANS" eq "n" || "$ANS" eq "N" ) { return; }
+    } while( $ANS =~ /yY/ );
+
+#    @FtpFiles = qx{ cd ${ExtrDir}; find . -type f -ls | tr -s ' ' ' ' | cut -d " " -f 11 | sed -e "s%./%%"  };   
+#    @FtpFiles = qx{ cd ${ExtrDir}; find . -type f -ls | tr -s ' ' ' ' | cut -d " " -f 11 | sed -e "s%./%%" | grep $time };   
+#    @FtpFiles = qx{ cd ${ExtrDir}; find . -type f -ls | tr -s ' ' ' ' | cut -d " " -f $r11 | sed -e "s%./%%" | grep $time };   
+    @FtpFiles = qx{ cd ${ExtrDir}; ls | grep $time };   
+    #print"ftp: $time @FtpFiles\n";
+
+    open( FTP, ">/tmp/DOWNLOAD" ) || die "Can't create download sequence $!\n";
+    print( FTP "#! /bin/sh\n" );
+#    print( FTP "onintr -\n" );
+    print( FTP "trap -\n" );
+    print( FTP "ftp -v $IP_HOST <<DOWNLOAD\n" );
+    print( FTP "$USER\n" );
+    print( FTP "\n" );
+#    print( FTP "user $USER \n" );
+    print ( FTP "passive\n" );
+    print( FTP "bin\n" );
+    print( FTP "lcd ${ExtrDir}\n" );
+    if( length($LocalPWD) > 1 ) {
+        print( FTP "cd $LocalPWD\n" );
+    }
+    foreach $FileName (@FtpFiles) { 
+        print( FTP "put $FileName" );
+    }
+    print( FTP "bye\n" );
+    print( FTP "DOWNLOAD\n" );
+    print( FTP "exit \n" );
+    close( FTP );
+    chmod(0700, '/tmp/DOWNLOAD');
+    $st=qx(cat /tmp/DOWNLOAD);
+    #print"$st\n";
+    system( '/tmp/DOWNLOAD' );
+    unlink( '/tmp/DOWNLOAD' );
+    qx ( rm $ftpfile*);
+}
+
+################################
+# view data extracted
+################################
+sub ViewData {
+local( @ViewFiles = (),@ViewLs = (),@ViewLsWild = (),$count,$TraceCount );
+	
+	do {
+        printf( STDOUT "\nEnter your hostname to set the display.\n" );
+        printf( STDOUT "<host.domainname>:0.0 or q to quit.\n" );
+        printf( STDOUT "Default hostname: localhost:0.0\n" );
+		if( length($S_Host) >= 3 ) {
+			printf( STDOUT "(Now DISPLAY=$S_Host) -->" );
+		} else {
+        	printf( STDOUT "--->" );
+        }
+	if($first ne "first")
+	{
+	   $first = "first";
+	   $S_Host = "localhost:0.0";
+	}
+        $HOST = GetLine;
+        #if( "$HOST" eq "" && length($S_Host) >= 3 ) { goto NEXT; }
+        if( "$HOST" eq "" && length($S_Host) >= 3 ) { goto NEXT; }
+        if( "$HOST" eq "q" || "$HOST" eq "Q" ) { return; }   
+
+    } while ( length($HOST) < 3 );
+
+NEXT:
+    if( length($HOST) >= 3 ) { $S_Host = $HOST; }
+    if( $HOST eq "" && length($S_Host) >= 3 ) {	$HOST = $S_Host; }
+    print "\n";
+
+	if( -f "${ExtrDir}/core" ) {
+		system( " cd ${ExtrDir}; /bin/rm core" );
+	}
+    #@ViewLsWild = @ViewLs = qx{ cd ${ExtrDir}; find . -type f -ls | tr -s ' ' ' ' | cut -d " " -f 11 | sed -e "s%./%%" };
+    #@ViewLsWild = @ViewLs = qx{ cd ${ExtrDir}; find . -type f -ls | tr -s ' ' ' ' | cut -d " " -f $r11 | sed -e "s%./%%" };
+    @ViewLsWild = @ViewLs = qx{ cd ${ExtrDir}; ls };
+    #print"@ViewLsWild\n";
+    #@ViewLsWild = @ViewLs = qx{ find ${ExtrDir} -printf "%f\n" | grep -v tmp | grep -v SEED };
+
+    $count = 0;
+    foreach $FileName (@ViewLs) {        
+    	$count++;
+        push( @ViewFiles, "$count $FileName" ); 
+    }
+    
+    do{
+    	if( grep( /.*swap/, <${ExtrDir}/*.swap>) ) {
+    		qx{ cd ${ExtrDir}; /bin/rm *.swap };
+    	} 	
+    	printf( STDOUT "\navailable files to view ...\n\n" );
+    	printf( STDOUT "no    file\n" );
+    	printf( STDOUT "-----------------------\n" );
+    	print @ViewFiles;
+		printf( STDOUT "\nPlease select the number of MiniSEED file to view.");
+		printf( STDOUT "\nUse wildcards *,? (ex: *bh?) for more than one file." );
+		printf( STDOUT "\nType q to return to main menu.\n -->" );
+		$FILE_NO = GetLine;
+		printf( STDOUT "\n" );
+		
+		if( ! ($FILE_NO =~ /[qQ]/) ) {
+		 	if( $FILE_NO =~ /(.*)[*?](.*)/ ) {
+		 		$FILE_NO =~ y/a-z/A-Z/;
+		 		$PqlFiles = $FILE_NO; 
+		 		$FILE_NO =~ s/\?/\./g;
+    				$FILE_NO =~ s/\*/\.\*/g;
+    				$TraceCount = 0;
+				$ext = "";
+#		 		foreach $Sfile (@ViewLsWild) {
+#		 			$Sfile =~ y/\n/ /;
+#		 			if( $Sfile =~ /$FILE_NO/ ) {
+#		 				$TraceCount++;
+#		 				if ($OsType eq "linux-gnu")
+#						{
+#						   qx{ cd $ExtrDir; $SEEDBin/swap_mseed $Sfile -B 4096};
+#						   $ext = ".swap";
+#						}else{
+#						   $ext = "";
+#						}
+#		 			}
+#		 		}
+		 		qx{ DISPLAY=$HOST; export DISPLAY;cd $ExtrDir;$SEEDBin/pql -nw -m ${PqlFiles}$ext };
+#&GetLine; print "-----";
+#print "\nDISPLAY=$HOST; export DISPLAY; cd $ExtrDir; $SEEDBin/pql -n $TraceCount -nw -m ${PqlFiles}$ext" ;
+
+		 	} elsif( length($FILE_NO) > 0 ) {
+				($a,$ShowFile) = split(' ',@ViewFiles[$FILE_NO-1]);		
+				$ext = ""; 
+#				if ($OsType eq "linux-gnu")
+#				{
+#				   qx{ cd $ExtrDir; $SEEDBin/swap_mseed $ShowFile -B 4096};
+#				   $ext = ".swap";
+#				}else{
+#				   $ext = "";
+#				}
+				qx{ DISPLAY=$HOST;export DISPLAY;cd $ExtrDir;$SEEDBin/pql -n 1 -nw -m ${ShowFile}$ext };
+			}
+
+		}
+		
+	}while ( ! ($FILE_NO =~ /[qQ]/) );
+    
+
+}
+   
+################################
+#  clean out old files
+################################
+sub CleanOutFiles {
+(local $FileToDel,@ToDelList = ());
+               
+    print "\nsetting up temporary data directory $ExtrDir and cleaning out previous files...\n\n";
+  	@ToDelList = qx( find $ExtrDir -type f -print );
+    foreach $FileToDel (@ToDelList) {
+    	system( "/bin/rm $FileToDel" );
+    }
+}
+
+sub CleanOutDir {
+(local $FileToDel,@ToDelList = ());
+               
+    print "\ncleaning out temporary data directory ...\n\n";
+  	@ToDelList = qx( find $ExtrDir -type f -print );
+    foreach $FileToDel (@ToDelList) {
+    	system( "/bin/rm $FileToDel" );
+    }
+    system( "/bin/rmdir $ExtrDir" );
+}
+
+################################
+#  Log users initials
+################################
+sub GetInitials {
+
+  	do {
+    	print "\nPlease enter your name or institution :\n--->";
+    	#$Initials = &GetLine;
+    	$Initials = <STDIN>;
+	if(! ($Initials =~ /\n/)) { exit(0); }
+	$Initials =~ y/\n//d;
+	print"\n   Welcome $Initials !\n";
+  	$Initials =~ s/[ \t]+/_/g;
+ 	$Initials =~ tr/A-Z/a-z/;
+    } while( !(length($Initials) > 0) );    
+    open( INITIALS, ">>$TmpDir/initials" );
+    $date_in = qx{ date }; 
+    #printf(INITIALS "%s\n>> $Initials\n\n",$date_in);
+    printf(INITIALS "%s  $Initials\n",$date_in);
+    close( INITIALS );
+}
+  
+################################
+# Sort the check_times file
+################################
+sub ByDate {
+local( $Ya,$Yb,$Ma,$Mb,$Da,$Db );
+local( $ha,$hb,$ma,$mb,$sa,$sb );
+local( $A,$B,$Aa,$Ba,$SoA,$SoB );
+
+	$A = $a;
+	$B = $b;
+	$Aa = substr($A,0,12);
+	$Ba = substr($B,0,12);
+	($A) =~ tr/A-Za-z\ //d;
+	($B) =~ tr/A-Za-z\ //d;	
+	$Ya=substr($A,6,4);
+	$Yb=substr($B,6,4);
+	$Ma=substr($A,3,2);
+	$Mb=substr($B,3,2);
+	$Da=substr($A,0,2);
+	$Db=substr($B,0,2);
+
+	$ha=substr($A,10,2);
+	$hb=substr($B,10,2);
+	$ma=substr($A,13,2);
+	$mb=substr($B,13,2);
+	$sa=substr($A,16,2);
+	$sb=substr($B,16,2);
+	
+	$SoA = "$Ya$Ma$Da$ha$ma$sa";
+	$SoB = "$Yb$Mb$Db$hb$mb$sb";
+
+	if( !($Aa cmp $Ba) ) {	
+		return($SoA <=> $SoB);
+	} else {
+		return($Aa cmp $B);
+	}
+	 
+}	
+
+sub SortCheckTimes {
+local(@SortLines = ());
+local($Line);
+
+@SortLines = qx{ cat ${TmpDir}/check_times_u };
+
+	open( SFILE, ">${TmpDir}/check_times_gaps" );
+	foreach $Line (sort ByDate @SortLines) {
+		printf( SFILE "%s",$Line );
+	}
+	close(SFILE);
+	system( "/bin/rm ${TmpDir}/check_times_u" );
+	
+}
+
+################################
+# recreate List with gaps
+################################
+sub CheckTimeStamp {
+local( $a = $_[0],$b = $_[1]);
+local( $Ya,$Yb,$Ma,$Mb,$Da,$Db );
+local( $ha,$hb,$ma,$mb,$sa,$sb );
+local( $A,$B );
+local( $EndTime, $BeginTime );
+
+	$A = $a;
+	$B = $b;
+	($A) =~ tr/A-Za-z\ //d;
+	($B) =~ tr/A-Za-z\ //d;	
+	$Ya=substr($A,6,4);
+	$Yb=substr($B,6,4);
+	$Ma=substr($A,3,2);
+	$Mb=substr($B,3,2);
+	$Da=substr($A,0,2);
+	$Db=substr($B,0,2);
+
+	$ha=substr($A,10,2);
+	$hb=substr($B,10,2);
+	$ma=substr($A,13,2);
+	$mb=substr($B,13,2);
+	$sa=substr($A,16,2);
+	$sb=substr($B,16,2);
+	
+	$EndTime   = "$Ya$Ma$Da$ha$ma$sa";
+	$BeginTime = "$Yb$Mb$Db$hb$mb$sb";
+
+	if( $EndTime >= $BeginTime ) {
+		return(1);
+	} else {
+		return(0);
+	}
+}
+
+sub GapCheck {
+local(@SortLines = ());
+local($Line);
+
+	open( SFILE, ">${TmpDir}/check_times" );
+	open( TFILE, "${TmpDir}/check_times_gaps" );
+
+	if( $Line = <TFILE> ) {
+#print "READING 1:$Line";
+NEXT_STAT:
+		$SName  = substr($Line,0,12);
+		$SStart = substr($Line,12,24);
+		$SEnd   = substr($Line,41,24);
+	} else {
+		close(TFILE);
+		close(SFILE);
+		return;
+	}
+	
+	while( $Line = <TFILE> ) {
+#print "READING 2:$Line";
+		$RName  = substr($Line,0,12);
+		$RStart = substr($Line,12,24);
+		$REnd   = substr($Line,41,24);
+		$RLine  = $Line;
+		
+		if( "$SName" ne "$RName" ) {
+			printf( SFILE "$SName$SStart  -  $SEnd\n");
+#print("WRITING 1:$SName$SStart  -  $SEnd\n");
+			$SName  = $RName;
+			$SStart = $RStart;
+			$SEnd   = $REnd;
+			$Line   = $RLine;
+			goto NEXT_STAT; 
+		} else {
+			if( CheckTimeStamp($SEnd,$RStart) ) {
+				$SEnd = $REnd;
+			} else {
+#print("WRITING 1:$SName$SStart  -  $SEnd\n");				
+				printf( SFILE "$SName$SStart  -  $SEnd\n");
+				$SName  = substr($Line,0,12);
+				$SStart = substr($Line,12,24);
+				$SEnd   = substr($Line,41,24);
+			}
+		}
+	}
+#print("WRITING 2:$SName$SStart  -  $SEnd\n");
+	printf( SFILE "$SName$SStart  -  $SEnd\n");
+	
+	close(TFILE);
+	close(SFILE);
+#	system( "/bin/rm ${TmpDir}/check_times_gaps" );
+}
+
+
+################################
+#            main
+################################
+
+if( @ARGV == 1 ) {
+    ($LineArg) = @ARGV;
+    if( "$LineArg" == "times" ) {
+        &CheckFileList;
+        &RunCheckFile;
+        &SortCheckTimes();
+        &GapCheck();
+    }
+    exit(0);
+}
+
+@CMP         = ();
+@STR         = ();
+@ExtrParam   = ();
+@FtpFiles    = ();
+@FtpFilesLs  = ();
+@ChannelList = ();
+@ToCatCHN    = ();
+$CHKPATTERN  = '([A-Z]{1,1})([H]{1,1})([ENZ]{1,1})';
+$SearchCount = 0;
+$StatCount   = 0;
+# modes are 0 - no mode, 1 - examine date, 2 - extract data
+$SelectMode  = 0;
+$SelectChanMode = 0;
+
+# get stations avail on data logger
+
+@DRMStations = ();
+$ShowStats   = "";
+foreach $Station (<$ComservHome/config/station_*>) {
+ 	push(@DRMStations,(split( 'station_', $Station))[1]);
+ 	$StatCount++;
+}
+
+# print Welcome message from file Welcome
+
+@OutWelcome = ();
+print "\n\n\n";
+@OutWelcome = qx{ cat $DRMHome/drm_welcome };
+
+print @OutWelcome;
+
+&GetInitials;
+&MakeTempDir;
+
+print "\nData for station(s) ";
+foreach $OStat (@DRMStations){
+	# station name
+	$ShowStats = "$ShowStats $OStat";
+	print "$OStat ";
+}
+print "are available on this DRM.\n";
+
+        &CleanOutFiles;                    
+
+AGAIN:
+$ToDo = "";
+
+do {
+	$ToDo = &MainMenu;
+	# default select mode with date, times not required
+	# 1 = starttime not required
+	# 2 = starttime required
+	$SelectMode = 1;
+	
+	# default channel mode ,ask for channels
+	# 1 = ask for channels
+	# 2 = do not ask for channels
+	$SelectChanMode = 1;
+	 
+	TODO: {
+        if($ToDo =~ /^[eE]/) {
+            @TimesAndDates = ();
+            
+#  ask for all streams
+#           &ExtractData( 1 );
+#  ask for wildcard
+	    if( &ExtractData( 0 ) ) { goto AGAIN; };
+            
+            &StartEndDay;
+            $SearchCount = 0;
+            #&CheckFileListActive;
+            #print "\nCreating data list on available data streams ...\n\n";
+            print "\nCreating chart for data stream @STRCMP...\n\n";
+            #&ShowTimes;
+	    #print"$times -c $StatToUse GE 900101 380101 @STRCMP\n";
+	    $st=qx($times -c $StatToUse GE 900101 380101 @STRCMP);
+	    print "$st\n";
+            #if( $SearchCount == 0 ) {
+            if( $st eq "" ) {
+                printf( STDOUT "\n** NO DATA FOUND IN THIS WINDOW **\n" );
+            }                        
+            last TODO;
+        }
+        if($ToDo =~ /^[sS]/) {
+        	$SelectMode = 2;
+#
+# ask for old data to be cleaned out
+#
+#            do {
+#                print "\nAll old data files will be cleaned out !";
+#                print "\nDo you want to continue [[y]/n]?";
+#                $ContAns = GetLine;
+#                if( $ContAns =~ /[nN]/ ) {
+#                    last TODO;
+#                }
+#            } while( ! $ContAns =~ /[yY]/ );
+# enable cleanout
+#
+			$ContAns = "y";
+            
+            @TimesAndDates = ();
+            if( &ExtractData( 0 ) ) { goto AGAIN; };
+            &StartEndDay;
+            #&CleanOutFiles;                    
+            @Allextr_files = &ExtrFiles;
+			last TODO;
+		}
+		if($ToDo =~ /^[dD]/) {
+			&DownLoadMenu;
+			last TODO;
+		}
+                if($ToDo =~ /^[cC]/) {
+                        &ListTmpDir;
+                        last TODO;
+		}
+        	if($ToDo =~ /^[oO]/) {
+			&SysMenu;
+			last TODO;
+		}
+		if($ToDo =~ /[vV]/) {
+			&ViewData;
+			last TODO;
+		}
+		if($ToDo =~ /^[mM]/) {
+			$MAIL_ADDR = "$ENV{'SYS_MAIL_ADDR'}";
+			system( "vi /tmp/mailtoop" );
+			qx{ cat /tmp/mailtoop | mail -s "DRM notification ..." $MAIL_ADDR };
+			qx{ /bin/rm /tmp/mailtoop };			
+			last TODO;
+		}
+		if($ToDo =~ /^[lL][dD]/) {
+			$SelectChanMode = 2;
+			@TimesAndDates = ();
+			&ExtractData( 0 );
+			&StartEndDay;
+			&ListLog( "DETECTION" );
+			last TODO;
+		}
+		if($ToDo =~ /^[lL][cC]/) {
+			$SelectChanMode = 2;
+			@TimesAndDates = ();
+			&ExtractData( 0 );
+			&StartEndDay;
+			&ListLog( "CALIBRATION" );
+			last TODO;
+		}
+		if($ToDo =~ /^[lL][sS]/) {
+			print"\nSearch string --> ";
+			$string = <STDIN>;
+			chomp $string;
+			$SelectChanMode = 2;
+			@TimesAndDates = ();
+			&ExtractData( 0 );
+			&StartEndDay;
+			&ListLog( "STRING" );
+			last TODO;
+		}
+		if($ToDo =~ /^[lL][tT]/) {
+			$SelectChanMode = 2;
+			@TimesAndDates = ();
+			&ExtractData( 0 );
+			&StartEndDay;
+			&ListLog( "TIMING" );
+			last TODO;
+		}
+		if($ToDo =~ /^[lL][lL]/) {
+			$SelectChanMode = 2;
+			@TimesAndDates = ();
+			&ExtractData( 0 );
+			&StartEndDay;
+			&ListLog( "LOG" );
+			last TODO;
+		}
+	}
+	
+} while( ! ($ToDo  =~ /^[qQ]/) );
+
+# disabled, cleaning out data
+#&CleanOutDir;
+
+$SIG{'INT'}  = 'DEFAULT';
+$SIG{'HUP'}  = 'DEFAULT';
+$SIG{'QUIT'} = 'DEFAULT';
+$SIG{'TSTP'} = 'DEFAULT';
+$SIG{'TERM'} = 'DEFAULT';
+exit(0);

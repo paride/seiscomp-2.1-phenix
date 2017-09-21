@@ -1,0 +1,134 @@
+diff -ur templates/seedlink_plugin_chain.tpl templates.syslog/seedlink_plugin_chain.tpl
+--- templates/seedlink_plugin_chain.tpl	2005-07-26 21:28:54.000000000 +0200
++++ templates.syslog/seedlink_plugin_chain.tpl	2005-07-29 15:02:42.000000000 +0200
+@@ -1,4 +1,4 @@
+-plugin chain cmd="#home_sysop#/bin/chain_plugin -v -f #home_sysop#/config/#chain_xml#"
++plugin chain cmd="#home_sysop#/bin/chain_plugin -D -v -f #home_sysop#/config/#chain_xml#"
+              timeout = 600
+              start_retry = 60
+              shutdown_wait = 15
+diff -ur templates/seedlink_plugin_comserv.tpl templates.syslog/seedlink_plugin_comserv.tpl
+--- templates/seedlink_plugin_comserv.tpl	2005-07-26 21:28:54.000000000 +0200
++++ templates.syslog/seedlink_plugin_comserv.tpl	2005-07-29 15:02:42.000000000 +0200
+@@ -1,4 +1,4 @@
+-plugin cserv cmd = "#home_sysop#/bin/comserv_plugin -v -f #home_sysop#/config/plugins.ini"
++plugin cserv cmd = "#home_sysop#/bin/comserv_plugin -D -v -f #home_sysop#/config/plugins.ini"
+              timeout = 0
+              start_retry = 60
+              shutdown_wait = 10
+diff -ur templates/seedlink_plugin_dr24.tpl templates.syslog/seedlink_plugin_dr24.tpl
+--- templates/seedlink_plugin_dr24.tpl	2005-07-26 21:28:54.000000000 +0200
++++ templates.syslog/seedlink_plugin_dr24.tpl	2005-07-29 15:02:42.000000000 +0200
+@@ -1,4 +1,4 @@
+-plugin dr24_#statid# cmd="#home_sysop#/bin/serial_plugin -v -f #home_sysop#/config/plugins.ini"
++plugin dr24_#statid# cmd="#home_sysop#/bin/serial_plugin -D -v -f #home_sysop#/config/plugins.ini"
+              timeout = 600
+              start_retry = 60
+              shutdown_wait = 10
+diff -ur templates/seedlink_plugin_guralp.tpl templates.syslog/seedlink_plugin_guralp.tpl
+--- templates/seedlink_plugin_guralp.tpl	2005-07-26 21:28:54.000000000 +0200
++++ templates.syslog/seedlink_plugin_guralp.tpl	2005-07-29 15:02:42.000000000 +0200
+@@ -1,4 +1,4 @@
+-plugin guralp_#statid# cmd="#home_sysop#/bin/serial_plugin -v -f #home_sysop#/config/plugins.ini"
++plugin guralp_#statid# cmd="#home_sysop#/bin/serial_plugin -D -v -f #home_sysop#/config/plugins.ini"
+              timeout = 600
+              start_retry = 60
+              shutdown_wait = 10
+diff -ur templates/seedlink_plugin_hrd24.tpl templates.syslog/seedlink_plugin_hrd24.tpl
+--- templates/seedlink_plugin_hrd24.tpl	2005-07-26 21:28:54.000000000 +0200
++++ templates.syslog/seedlink_plugin_hrd24.tpl	2005-07-29 15:02:42.000000000 +0200
+@@ -1,4 +1,4 @@
+-plugin hrd24_#statid# cmd="#home_sysop#/bin/serial_plugin -v -f #home_sysop#/config/plugins.ini"
++plugin hrd24_#statid# cmd="#home_sysop#/bin/serial_plugin -D -v -f #home_sysop#/config/plugins.ini"
+              timeout = 600
+              start_retry = 60
+              shutdown_wait = 10
+diff -ur templates/seedlink_plugin_nrts.tpl templates.syslog/seedlink_plugin_nrts.tpl
+--- templates/seedlink_plugin_nrts.tpl	2005-07-26 21:28:54.000000000 +0200
++++ templates.syslog/seedlink_plugin_nrts.tpl	2005-07-29 15:02:42.000000000 +0200
+@@ -1,4 +1,4 @@
+-plugin #pluginid# cmd="#home_sysop#/bin/nrts_plugin -v -s #srcaddr# -p #srcport#"
++plugin #pluginid# cmd="#home_sysop#/bin/nrts_plugin -D -v -s #srcaddr# -p #srcport#"
+              timeout = 3600
+              start_retry = 60
+              shutdown_wait = 10
+diff -ur templates/seedlink_plugin_ps2400_eth.tpl templates.syslog/seedlink_plugin_ps2400_eth.tpl
+--- templates/seedlink_plugin_ps2400_eth.tpl	2005-07-26 21:28:54.000000000 +0200
++++ templates.syslog/seedlink_plugin_ps2400_eth.tpl	2005-07-29 15:03:45.000000000 +0200
+@@ -1,4 +1,4 @@
+-plugin edata_#statid# cmd="#home_sysop#/bin/serial_plugin -v -f #home_sysop#/config/plugins.ini"
++plugin edata_#statid# cmd="#home_sysop#/bin/serial_plugin -D -v -f #home_sysop#/config/plugins.ini"
+              timeout = 600
+              start_retry = 60
+              shutdown_wait = 10
+diff -ur templates/seedlink_plugin_ps2400_r.tpl templates.syslog/seedlink_plugin_ps2400_r.tpl
+--- templates/seedlink_plugin_ps2400_r.tpl	2005-07-26 21:28:54.000000000 +0200
++++ templates.syslog/seedlink_plugin_ps2400_r.tpl	2005-07-29 15:02:42.000000000 +0200
+@@ -1,4 +1,4 @@
+-plugin edata_#statid# cmd="#home_sysop#/bin/serial_plugin -v -f #home_sysop#/config/plugins.ini"
++plugin edata_#statid# cmd="#home_sysop#/bin/serial_plugin -D -v -f #home_sysop#/config/plugins.ini"
+              timeout = 600
+              start_retry = 60
+              shutdown_wait = 10
+diff -ur templates/seedlink_plugin_ps2400.tpl templates.syslog/seedlink_plugin_ps2400.tpl
+--- templates/seedlink_plugin_ps2400.tpl	2005-07-26 21:28:54.000000000 +0200
++++ templates.syslog/seedlink_plugin_ps2400.tpl	2005-07-29 15:02:42.000000000 +0200
+@@ -1,4 +1,4 @@
+-plugin edata_#statid# cmd="#home_sysop#/bin/serial_plugin -v -f #home_sysop#/config/plugins.ini"
++plugin edata_#statid# cmd="#home_sysop#/bin/serial_plugin -D -v -f #home_sysop#/config/plugins.ini"
+              timeout = 600
+              start_retry = 60
+              shutdown_wait = 10
+diff -ur templates/seedlink_plugin_reftek.tpl templates.syslog/seedlink_plugin_reftek.tpl
+--- templates/seedlink_plugin_reftek.tpl	2005-07-26 21:28:54.000000000 +0200
++++ templates.syslog/seedlink_plugin_reftek.tpl	2005-07-29 15:02:42.000000000 +0200
+@@ -1,4 +1,4 @@
+-plugin #pluginid# cmd="#home_sysop#/bin/reftek_plugin -v -f #home_sysop#/config/plugins.ini"
++plugin #pluginid# cmd="#home_sysop#/bin/reftek_plugin -D -v -f #home_sysop#/config/plugins.ini"
+              timeout = 0
+              start_retry = 60
+              shutdown_wait = 60
+diff -ur templates/seedlink_plugin_seisan.tpl templates.syslog/seedlink_plugin_seisan.tpl
+--- templates/seedlink_plugin_seisan.tpl	2005-07-26 21:28:54.000000000 +0200
++++ templates.syslog/seedlink_plugin_seisan.tpl	2005-07-29 15:02:42.000000000 +0200
+@@ -1,4 +1,4 @@
+-plugin seisan cmd="#home_sysop#/bin/fs_plugin -v -f #home_sysop#/config/plugins.ini"
++plugin seisan cmd="#home_sysop#/bin/fs_plugin -D -v -f #home_sysop#/config/plugins.ini"
+              timeout = 1200
+              start_retry = 60
+              shutdown_wait = 10
+diff -ur templates/seedlink_plugin_win.tpl templates.syslog/seedlink_plugin_win.tpl
+--- templates/seedlink_plugin_win.tpl	2005-07-27 18:11:16.000000000 +0200
++++ templates.syslog/seedlink_plugin_win.tpl	2005-07-29 15:02:42.000000000 +0200
+@@ -1,4 +1,4 @@
+-plugin #pluginid# cmd="#home_sysop#/bin/win_plugin -v -F #home_sysop#/config/win2sl.map #srcport# -"
++plugin #pluginid# cmd="#home_sysop#/bin/win_plugin -D -v -F #home_sysop#/config/win2sl.map #srcport# -"
+              timeout = 3600
+              start_retry = 60
+              shutdown_wait = 10
+diff -ur templates/seiscomp_ctrl.tpl templates.syslog/seiscomp_ctrl.tpl
+--- templates/seiscomp_ctrl.tpl	2005-07-26 21:28:54.000000000 +0200
++++ templates.syslog/seiscomp_ctrl.tpl	2005-07-29 15:02:42.000000000 +0200
+@@ -64,18 +64,18 @@
+ 
+ #DGS#        if trylock $PIDDIR/digiserv.pid; then
+ #DGS#            echo "starting digiserv"
+-#DGS#            digiserv -v \
++#DGS#            digiserv -D -v \
+ #DGS#              -f $CFGDIR/digiserv.ini \
+-#DGS#              >> $LOGDIR/digiserv.log 2>&1 &
++#DGS#              >> $LOGDIR/digiserv.log 2>&1
+ #DGS#        else
+ #DGS#            echo "digiserv is running"
+ #DGS#        fi
+ #DGS#
+ #SLK#        if trylock $PIDDIR/seedlink.pid; then
+ #SLK#            echo "starting seedlink"
+-#SLK#            seedlink -v \
++#SLK#            seedlink -D -v \
+ #SLK#              -f $CFGDIR/seedlink.ini \
+-#SLK#              >> $LOGDIR/seedlink.log 2>&1 &
++#SLK#              >> $LOGDIR/seedlink.log 2>&1
+ #SLK#        else
+ #SLK#            echo "seedlink is running"
+ #SLK#        fi

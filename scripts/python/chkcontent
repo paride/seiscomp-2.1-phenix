@@ -1,0 +1,15 @@
+#!/bin/bash
+
+BIN_DIR=/home/sysop/bin
+PYTHON_DIR=/home/sysop/python
+STATUS_DIR=/home/sysop/status
+
+PATH=$BIN_DIR:$PATH
+
+while :; do
+  run_with_lock $STATUS_DIR/chkdata_xml.pid python $PYTHON_DIR/chkcontent.py
+  if [ $? -ne 255 ]; then exit $?; fi
+  echo "...database temporarily locked...trying again..."
+  sleep 60
+done
+

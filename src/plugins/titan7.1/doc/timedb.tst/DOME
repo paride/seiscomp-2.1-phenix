@@ -1,0 +1,11 @@
+#!/bin/csh -f
+
+# vi /home/fels/sismnet/cvtit.conf
+
+setenv CVTIT_CONF /home/fels/sismnet/cvtit.conf
+cvtit -f ../../../FIC* -time db=pyren
+xdft GDM /home/fels/sismnet/dt/GDM/1996.11.05-23.55.03.GDM.dt
+cp 1996.11.05-23.52.00.GDM.dt /home/fels/sismnet/dt/GDM
+mkdir /home/fels/sismnet/dft/GDM
+cp 1996.11.05-23.51.28.GDM.dft /home/fels/sismnet/dft/GDM
+cvtit -f ../../../FIC* db=pyren -sac -daydir

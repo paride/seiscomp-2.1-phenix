@@ -1,0 +1,62 @@
+<!ELEMENT chain (extension*, group+)>
+<!ATTLIST chain
+          verbosity         CDATA #IMPLIED
+          timetable_loader  CDATA #IMPLIED
+          overlap_removal   (none | initial | full) #IMPLIED
+          multistation      (yes | no) #IMPLIED
+          netto             CDATA #IMPLIED
+          netdly            CDATA #IMPLIED
+          keepalive         CDATA #IMPLIED
+          standby           CDATA #IMPLIED
+          seqsave           CDATA #IMPLIED>
+<!ELEMENT extension EMPTY>
+<!ATTLIST extension
+          name              CDATA #REQUIRED
+          cmd               CDATA #REQUIRED
+          filter            CDATA #IMPLIED
+          recv_timeout      CDATA #IMPLIED
+          send_timeout      CDATA #IMPLIED
+          start_retry       CDATA #IMPLIED
+          shutdown_wait     CDATA #IMPLIED>
+<!ELEMENT group (station+)>
+<!ATTLIST group
+          address           CDATA #REQUIRED
+          overlap_removal   (none | initial | full) #IMPLIED
+          multistation      CDATA #IMPLIED
+          netto             CDATA #IMPLIED
+          netdly            CDATA #IMPLIED
+          keepalive         CDATA #IMPLIED
+          uptime            CDATA #IMPLIED
+          standby           CDATA #IMPLIED
+          seqsave           CDATA #IMPLIED
+          seqfile           CDATA #IMPLIED
+          ifup              CDATA #IMPLIED
+          ifdown            CDATA #IMPLIED
+          schedule          CDATA #IMPLIED
+          lockfile          CDATA #IMPLIED>
+<!ELEMENT station (rename*, trigger*, unpack*)>
+<!ATTLIST station
+          id                CDATA #IMPLIED
+          name              CDATA #REQUIRED
+          network           CDATA #REQUIRED
+          out_name          CDATA #IMPLIED
+          out_network       CDATA #IMPLIED
+          selectors         CDATA #IMPLIED
+          overlap_removal   (none | initial | full) #IMPLIED
+          default_timing_quality    CDATA #IMPLIED>
+<!ELEMENT rename EMPTY>
+<!ATTLIST rename
+          from              CDATA #REQUIRED
+          to                CDATA #REQUIRED>
+<!ELEMENT trigger EMPTY>
+<!ATTLIST trigger
+          src               CDATA #REQUIRED
+          buffer_length     CDATA #IMPLIED
+          pre_seconds       CDATA #IMPLIED
+          post_seconds      CDATA #IMPLIED>
+<!ELEMENT unpack EMPTY>
+<!ATTLIST unpack
+          src               CDATA #REQUIRED
+          dest              CDATA #REQUIRED
+          double_rate       (yes | no) #IMPLIED>
+

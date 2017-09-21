@@ -1,0 +1,19 @@
+<!ELEMENT streams (proc+)>
+<!ELEMENT proc (using+ | (using+, tree+) | tree+)>
+<!ATTLIST proc
+          name              CDATA #REQUIRED>
+<!ELEMENT using EMPTY>
+<!ATTLIST using
+          proc              CDATA #REQUIRED>
+<!ELEMENT tree (input+, node+)>
+<!ELEMENT input EMPTY>
+<!ATTLIST input
+          name              CDATA #REQUIRED
+          channel           CDATA #REQUIRED
+          location          CDATA #REQUIRED
+          rate              CDATA #REQUIRED>
+<!ELEMENT node (node*)>
+<!ATTLIST node
+          filter            CDATA #IMPLIED
+          stream            CDATA #IMPLIED>
+

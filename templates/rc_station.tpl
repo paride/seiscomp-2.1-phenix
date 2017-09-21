@@ -1,0 +1,8 @@
+STATION='#station#'
+NET='#netid#'
+DESC='#desc#'
+SRCADDR='#srcaddr#'
+SRCPORT='#srcport#'
+PLOT_SIZE='#plot_size#'
+PLOT_KEEP='#plot_keep#'
+DATA_KEEP='#data_keep#'

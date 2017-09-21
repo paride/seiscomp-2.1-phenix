@@ -1,0 +1,50 @@
+* Filter coefficients for recursive simulation and Butterworth bandpass filters
+* from STS-2 VBB output
+* WWSSN filter for 20 Hz samplingrate (BH?)
+*
+[WWSSSP] 		
+0 	
+0.845274   -1.68742   0.842150   -1.66049   0.714351 		
+4.45704E-04  -1.36181   0.490692
+*
+* LRSM filter for 20 Hz samplingrate (BH?)
+[LRSMSP] 		
+0 	
+0.746618   -1.49047   0.743859   -1.45309   0.527864 		
+1.56250E-04  0.  0.
+*
+* KIRNOS filter for 20 Hz samplingrate (BH?)
+[KIRNOS] 		
+0 	
+0.995558   -1.98743   0.991879   -1.98736   0.987512 		
+2.00079E-04  -0.629154  -0.348651
+*
+* Bandpass 0.7 - 2.0 Hz for 20 Hz samplingrate (BH?)
+[SPBP0.7_2] 	
+2 	
+4.12535E-02   -3.09292    3.79088   -2.19520   0.513982 	
+0.  0.  0.
+*
+* Bandpass 1.0 - 5.0 Hz for 20 Hz samplingrate (BH?)
+[SPBP1_5] 	
+2 	
+0.206572 -1.72156 1.19582 -0.553014 0.195816 			
+0.  0.  0.
+*
+* WWSSN LP filter for 20 Hz Hz samplingrate (BH?)
+[WWSSLP] 		
+0	
+0.981194   -1.95876   0.977569   -1.95854   0.958974 		
+6.23041E-04   -1.99373   0.993736
+*
+* LRSM LP filter for 20 Hz samplingrate (BH?)
+[LRSMLP] 		
+0 	
+0.992438   -1.98120   0.988771   -1.98108   0.981327 		
+6.21081E-04   -1.98740   0.987512
+*
+* Bandpass 0.01 - 0.07 Hz for 1 Hz samplingrate (LH?)
+[LPBP14_100s] 	
+2 	
+8.76555E-05   -3.97321    5.92011   -3.92060   0.973695 	
+0.  0.  0.

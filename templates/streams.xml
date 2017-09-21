@@ -1,0 +1,341 @@
+<?xml version="1.0" standalone="yes"?>
+<streams>
+  <!-- Generic stream configurations -->
+
+  <proc name="generic_6x100">
+    <tree>
+      <input name="Z" channel="Z" location="" rate="100"/>
+      <input name="N" channel="N" location="" rate="100"/>
+      <input name="E" channel="E" location="" rate="100"/>
+
+<!--  Uncomment this to enable 100Hz HH? streams  -->
+<!--                                              -->
+<!--  <node stream="HH"/>                         -->
+
+<!--  Uncomment this to enable 50Hz SH? streams   -->
+<!--                                              -->
+<!--  <node filter="F96C" stream="SH"/>           -->
+
+      <node filter="FS2D5" stream="BH">
+        <node filter="F96C">
+          <node filter="ULP" stream="LH">
+            <node filter="VLP" stream="VH"/>
+          </node>
+        </node>
+      </node>
+    </tree>
+    <tree>
+      <input name="Z1" channel="Z" location="" rate="100"/>
+      <input name="N1" channel="N" location="" rate="100"/>
+      <input name="E1" channel="E" location="" rate="100"/>
+
+<!--  Uncomment this to enable 100Hz HN? streams  -->
+<!--                                              -->
+<!--  <node stream="HN"/>                         -->
+
+      <node filter="F96C" stream="SN"/>
+    </tree>
+  </proc>
+  <proc name="generic_3x50">
+    <tree>
+      <input name="Z" channel="Z" location="" rate="50"/>
+      <input name="N" channel="N" location="" rate="50"/>
+      <input name="E" channel="E" location="" rate="50"/>
+      <node stream="SH"/>
+      <node filter="F96C" stream="BH">
+        <node filter="FS2D5">
+          <node filter="FS2D5" stream="LH">
+            <node filter="VLP" stream="VH"/>
+          </node>
+        </node>
+      </node>
+    </tree>
+  </proc>
+  <proc name="generic_3x40">
+    <tree>
+      <input name="Z" channel="Z" location="" rate="40"/>
+      <input name="N" channel="N" location="" rate="40"/>
+      <input name="E" channel="E" location="" rate="40"/>
+
+<!--  Uncomment this to enable 40Hz SH? streams   -->
+<!--                                              -->
+<!--  <node stream="SH"/>                         -->
+
+      <node filter="F96C" stream="BH">
+        <node filter="F96C">
+          <node filter="ULP" stream="LH">
+            <node filter="VLP" stream="VH"/>
+          </node>
+        </node>
+      </node>
+    </tree>
+  </proc>
+  <proc name="generic_3x20">
+    <tree>
+      <input name="Z" channel="Z" location="" rate="20"/>
+      <input name="N" channel="N" location="" rate="20"/>
+      <input name="E" channel="E" location="" rate="20"/>
+      <node stream="BH"/>
+      <node filter="F96C">
+        <node filter="ULP" stream="LH">
+          <node filter="VLP" stream="VH"/>
+        </node>
+      </node>
+    </tree>
+  </proc>
+  <proc name="stream_100">
+    <tree>
+      <input name="EHZ" channel="Z" location="" rate="100"/>
+      <input name="EHN" channel="N" location="" rate="100"/>
+      <input name="EHE" channel="E" location="" rate="100"/>
+      <node stream="EH"/>
+    </tree>
+  </proc>
+  <proc name="stream_50">
+    <tree>
+      <input name="BHZ" channel="Z" location="" rate="50"/>
+      <input name="BHN" channel="N" location="" rate="50"/>
+      <input name="BHE" channel="E" location="" rate="50"/>
+      <node stream="BH"/>
+    </tree>
+  </proc>
+  <proc name="stream_40">
+    <tree>
+      <input name="BHZ" channel="Z" location="" rate="40"/>
+      <input name="BHN" channel="N" location="" rate="40"/>
+      <input name="BHE" channel="E" location="" rate="40"/>
+      <node stream="BH"/>
+    </tree>
+  </proc>
+  <proc name="stream_20">
+    <tree>
+      <input name="BHZ" channel="Z" location="" rate="20"/>
+      <input name="BHN" channel="N" location="" rate="20"/>
+      <input name="BHE" channel="E" location="" rate="20"/>
+      <node stream="BH"/>
+    </tree>
+  </proc>
+
+  <!-- Q330 stream setup
+       Streams are re-encoded to get better compression
+       0.1Hz VH? and VL? streams are generated from 1Hz streams -->
+  
+  <proc name="q330">
+    <tree>
+      <input name="BHZ" channel="HZ" location="" rate="20"/>
+      <input name="BHN" channel="HN" location="" rate="20"/>
+      <input name="BHE" channel="HE" location="" rate="20"/>
+      <input name="BLZ" channel="LZ" location="" rate="20"/>
+      <input name="BLN" channel="LN" location="" rate="20"/>
+      <input name="BLE" channel="LE" location="" rate="20"/>
+      <node stream="B"/>
+    </tree>
+    <tree>
+      <input name="LHZ" channel="HZ" location="" rate="1"/>
+      <input name="LHN" channel="HN" location="" rate="1"/>
+      <input name="LHE" channel="HE" location="" rate="1"/>
+      <input name="LLZ" channel="LZ" location="" rate="1"/>
+      <input name="LLN" channel="LN" location="" rate="1"/>
+      <input name="LLE" channel="LE" location="" rate="1"/>
+      <node stream="L"/>
+      <node filter="VLP" stream="V"/>
+    </tree>
+    <tree>
+      <input name="LCQ" channel="CQ" location="" rate="1"/>
+      <input name="LCE" channel="CE" location="" rate="1"/>
+      <node stream="L"/>
+    </tree>
+    <tree>
+      <input name="VEP" channel="EP" location="" rate="1/10"/>
+      <input name="VEC" channel="EC" location="" rate="1/10"/>
+      <input name="VEA" channel="EA" location="" rate="1/10"/>
+      <input name="VKI" channel="KI" location="" rate="1/10"/>
+      <input name="VCO" channel="CO" location="" rate="1/10"/>
+      <input name="VPB" channel="PB" location="" rate="1/10"/>
+      <input name="VMU" channel="MU" location="" rate="1/10"/>
+      <input name="VMW" channel="MW" location="" rate="1/10"/>
+      <input name="VMV" channel="MV" location="" rate="1/10"/>
+      <node stream="V"/>
+    </tree>
+  </proc>
+
+  <!-- Reftek stream setup
+
+       Low bandwidth version; derive everything from 40 Hz
+       Reftek stream #2 must be set to 40 Hz
+
+       Stream#  Rate   Deci   Gain   Ch# 1   2   3   4   5   6
+          2      40       1     1       SHZ SHN SHE SNZ SNN SNE
+                          2     1       BHZ BHN BHE
+                         40     1       LHZ LHN LHE
+                        400     4       VHZ VHN VHE             -->
+
+  <proc name="reftek_6x40">
+    <tree>
+      <input name="1.0" channel="Z" location="" rate="40"/>
+      <input name="1.1" channel="N" location="" rate="40"/>
+      <input name="1.2" channel="E" location="" rate="40"/>
+      <node stream="SH"/>
+      <node filter="F96C" stream="BH">
+        <node filter="F96C">
+          <node filter="ULP" stream="LH">
+            <node filter="VLP" stream="VH"/>
+          </node>
+        </node>
+      </node>
+    </tree>
+    <tree>
+      <input name="1.3" channel="Z" location="" rate="40"/>
+      <input name="1.4" channel="N" location="" rate="40"/>
+      <input name="1.5" channel="E" location="" rate="40"/>
+      <node stream="SN"/>
+    </tree>
+  </proc>
+
+  <!-- High bandwidth version; use original streams when possible
+       Reftek streams #1..4 (if configured) must be set to 100, 40,
+       20, and 1 Hz
+
+       Stream#  Rate   Deci   Gain   Ch# 1   2   3   4   5   6
+          1      100      1     1       HHZ HHN HHE HNZ HNN HNE
+          2       40      1     1       SHZ SHN SHE SNZ SNN SNE
+          3       20      1     1       BHZ BHN BHE
+          4        1      1     1       LHZ LHN LHE
+                         10     4       VHZ VHN VHE             -->
+
+  <proc name="reftek">
+    <tree>
+      <input name="0.0" channel="Z" location="" rate="100"/>
+      <input name="0.1" channel="N" location="" rate="100"/>
+      <input name="0.2" channel="E" location="" rate="100"/>
+      <node stream="HH"/>
+    </tree>
+    <tree>
+      <input name="0.3" channel="Z" location="" rate="100"/>
+      <input name="0.4" channel="N" location="" rate="100"/>
+      <input name="0.5" channel="E" location="" rate="100"/>
+      <node stream="HN"/>
+    </tree>
+    <tree>
+      <input name="1.0" channel="Z" location="" rate="40"/>
+      <input name="1.1" channel="N" location="" rate="40"/>
+      <input name="1.2" channel="E" location="" rate="40"/>
+      <node stream="SH"/>
+    </tree>
+    <tree>
+      <input name="1.3" channel="Z" location="" rate="40"/>
+      <input name="1.4" channel="N" location="" rate="40"/>
+      <input name="1.5" channel="E" location="" rate="40"/>
+      <node stream="SN"/>
+    </tree>
+    <tree>
+      <input name="2.0" channel="Z" location="" rate="20"/>
+      <input name="2.1" channel="N" location="" rate="20"/>
+      <input name="2.2" channel="E" location="" rate="20"/>
+      <node stream="BH"/>
+    </tree>
+    <tree>
+      <input name="3.0" channel="Z" location="" rate="1"/>
+      <input name="3.1" channel="N" location="" rate="1"/>
+      <input name="3.2" channel="E" location="" rate="1"/>
+      <node stream="LH">
+        <node filter="VLP" stream="VH"/>
+      </node>
+    </tree>
+  </proc>
+
+  <!-- Common digitizers with RS-232 interface -->
+
+  <proc name="edata_aux">
+    <tree>
+      <input name="S1" channel="1" location="" rate="1"/>
+      <input name="S2" channel="2" location="" rate="1"/>
+      <input name="S3" channel="3" location="" rate="1"/>
+      <input name="S4" channel="4" location="" rate="1"/>
+      <input name="S5" channel="5" location="" rate="1"/>
+      <input name="S6" channel="6" location="" rate="1"/>
+      <input name="S7" channel="7" location="" rate="1"/>
+      <input name="S8" channel="8" location="" rate="1"/>
+      <input name="PLL" channel="P" location="" rate="1"/>
+      <node stream="AE"/>
+    </tree>
+  </proc>
+  <proc name="lennartz_aux">
+    <tree>
+      <input name="T" channel="T" location="" rate="1"/>
+      <input name="B" channel="B" location="" rate="1"/>
+      <input name="X" channel="X" location="" rate="1"/>
+      <input name="Y" channel="Y" location="" rate="1"/>
+      <node stream="AE"/>
+    </tree>
+  </proc>
+  <proc name="dr24_aux">
+    <tree>
+      <input name="S0" channel="0" location="" rate="1/10"/>
+      <input name="S1" channel="1" location="" rate="1/10"/>
+      <input name="S2" channel="2" location="" rate="1/10"/>
+      <input name="S3" channel="3" location="" rate="1/10"/>
+      <input name="S4" channel="4" location="" rate="1/10"/>
+      <input name="S5" channel="5" location="" rate="1/10"/>
+      <input name="S6" channel="6" location="" rate="1/10"/>
+      <input name="S7" channel="7" location="" rate="1/10"/>
+      <input name="S8" channel="8" location="" rate="1/10"/>
+      <input name="S9" channel="9" location="" rate="1/10"/>
+      <node stream="AE"/>
+    </tree>
+  </proc>
+  <proc name="edata_100">
+    <using proc="generic_6x100"/>
+    <using proc="edata_aux"/>
+  </proc>
+  <proc name="lennartz_100">
+    <using proc="generic_6x100"/>
+    <using proc="lennartz_aux"/>
+  </proc>
+  <proc name="dr24_50">
+    <using proc="generic_3x50"/>
+    <using proc="dr24_aux"/>
+  </proc>
+  
+  <!-- Special systems -->
+
+  <proc name="irae">
+    <!-- STS-2 -->
+    <tree>
+      <input name="Z0" channel="Z" location="" rate="125"/>
+      <input name="N0" channel="N" location="" rate="125"/>
+      <input name="E0" channel="E" location="" rate="125"/>
+      <!-- BHZ, BHN, BHE generated here -->
+      <node filter="FS2D5" stream="BH"/>
+    </tree>
+    <!-- CMG-5 -->
+    <tree>
+      <input name="Z1" channel="Z" location="" rate="125"/>
+      <input name="N1" channel="N" location="" rate="125"/>
+      <input name="E1" channel="E" location="" rate="125"/>
+      <!-- SNZ, SNN, SNE generated here -->
+      <node filter="FS2D5" stream="SN"/>
+    </tree>
+    <!-- STS-2 LP -->
+    <tree>
+      <input name="Z2" channel="Z" location="" rate="125/128"/>
+      <input name="N2" channel="N" location="" rate="125/128"/>
+      <input name="E2" channel="E" location="" rate="125/128"/>
+      <!-- LHZ, LHN, LHE generated here -->
+      <node stream="LH"/>
+    </tree>
+  </proc>
+  <proc name="tiltmeter">
+    <tree>
+      <input name="N" channel="N" location="" rate="1/10"/>
+      <input name="E" channel="E" location="" rate="1/10"/>
+      <node stream="VA"/>
+    </tree>
+    <tree>
+      <input name="TN" channel="N" location="" rate="1/10"/>
+      <input name="TE" channel="E" location="" rate="1/10"/>
+      <node stream="XE"/>
+    </tree>
+  </proc>
+</streams>
+

@@ -1,0 +1,109 @@
+      SUBROUTINE SIFIL(LSEC,DA,KS,W1,W2,K,NREC,NBAND)
+C
+C   ********************************************************************
+C   SIFIL COMPUTES THE OUTPUT OF A 2-CASCADE RECURSIVE FILTER FOR THE
+C   SIMULATION OF A SEISMOMETER-GALVANOMETER-SYSTEM RESP. THE OUTPUT
+C   OF A NBAND-CASCADE 2-POLE-BUTTERWORTH-FILTER
+C   BY D.SEIDL AND W.HANKA
+C   ********************************************************************
+C
+      REAL*4 DA(*),W1(*),W2(*)
+      DIMENSION DAM(3,4,30),DAFM(3,4,30)
+C
+      write(*,*) 'LSEC ',LSEC,' KS ',KS,' K ',K
+      write(*,*) ' NREC ',NREC,' NBAND ',NBAND
+      DO 1111 J=1,20
+      	write(*,*) 'dat ',J,' = ',DA(J)
+1111  CONTINUE
+
+      IF(K.GT.30) RETURN
+      IF(NBAND.GT.3) NBAND=3
+      IF(NREC.GT.1) GOTO 20
+      DO 5 J=1,4
+      DO 10 N=1,3
+      DAM(N,J,K)=0.
+      DAFM(N,J,K)=0.
+10    CONTINUE
+5     CONTINUE
+20    W11=W1(1)
+      W12=W1(2)
+      W13=W1(3)
+      W14=W1(4)
+      W15=W1(5)
+      W21=W2(1)
+      W22=W2(2)
+      W23=W2(3)
+      IF(NBAND.GE.1) GOTO 100
+C
+C   SIMULATION OF SEISMOMETER-GALVANOMETER-SYSTEM
+C
+      DAS1=DAM(1,1,K)
+      DAS2=DAM(1,2,K)
+      DAFS1=DAFM(1,1,K)
+      DAFS2=DAFM(1,2,K)
+      DAFG1=DAFM(2,1,K)
+      DAFG2=DAFM(2,2,K)
+      DO 30 J=1,LSEC
+      write(*,*) 'da',J,' ',DA(J)
+      DAFS=W12*DAS1
+      DAFS=DAFS+W13*DAS2
+      DAS2=DAS1
+      DAS1=DA(J)
+      DAFS=DAFS+W11*DAS1
+      DAFS=DAFS-W14*DAFS1
+      DAFS=DAFS-W15*DAFS2
+      DAFG=DAFS+DAFS1+DAFS1+DAFS2
+      DAFG=W21*DAFG
+      DAFG=DAFG-W22*DAFG1
+      DA(J)=DAFG-W23*DAFG2
+      DAFS2=DAFS1
+      DAFS1=DAFS
+      DAFG2=DAFG1
+30    DAFG1=DA(J)
+      DAM(1,1,K)=DAS1
+      DAM(1,2,K)=DAS2
+      DAFM(1,1,K)=DAFS1
+      DAFM(1,2,K)=DAFS2
+      DAFM(2,1,K)=DAFG1
+      DAFM(2,2,K)=DAFG2
+      RETURN
+C
+C   2-POLE BUTTERWORTH-FILTER
+C
+100   CONTINUE
+      DO 140 N=1,NBAND
+      DAS1=DAM(N,1,K)
+      DAS2=DAM(N,2,K)
+      DAS3=DAM(N,3,K)
+      DAS4=DAM(N,4,K)
+      DAFS1=DAFM(N,1,K)
+      DAFS2=DAFM(N,2,K)
+      DAFS3=DAFM(N,3,K)
+      DAFS4=DAFM(N,4,K)
+      DO 110 J=1,LSEC
+      DAFS=DAS4-2.*DAS2
+      DAS4=DAS3
+      DAS3=DAS2
+      DAS2=DAS1
+      DAS1=DA(J)
+      DAFS=DAS1+DAFS
+      DAFS=W11*DAFS
+      DAFS=DAFS-W12*DAFS1
+      DAFS=DAFS-W13*DAFS2
+      DAFS=DAFS-W14*DAFS3
+      DAFS=DAFS-W15*DAFS4
+      DAFS4=DAFS3
+      DAFS3=DAFS2
+      DAFS2=DAFS1
+      DAFS1=DAFS
+110   DA(J)=DAFS
+      DAM(N,1,K)=DAS1
+      DAM(N,2,K)=DAS2
+      DAM(N,3,K)=DAS3
+      DAM(N,4,K)=DAS4
+      DAFM(N,1,K)=DAFS1
+      DAFM(N,2,K)=DAFS2
+      DAFM(N,3,K)=DAFS3
+140   DAFM(N,4,K)=DAFS4
+      RETURN
+      END

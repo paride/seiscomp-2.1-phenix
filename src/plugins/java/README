@@ -1,0 +1,4 @@
+This directory contains sources of bud_plugin---a plugin for BUD filesystem
+(Buffer of Uniform Data)---, which can be taken as an example of how to
+implement a SeedLink plugin in Java using gcj (GCC Java compiler).
+

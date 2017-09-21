@@ -1,0 +1,71 @@
+FUNCTION main
+
+if [connect to comserv server for station X == ERROR] then
+	handle ERROR
+else
+	while [no interrupt or ERROR]
+		contact server for status changes
+		if[ no message from server ]
+			if[ first loop]
+				get cleanup configuration
+				get tape configuration
+ 
+			if[ check disk space and clean out ] == DUMP
+			
+				init INFO structure 
+					with tape status
+					with logfile status
+		
+				case INFO status == TAPE_NOT_READY
+					continue
+				case INFO status == TAPE_BUSY
+					continue
+				case INFO status == TAPE_ASYNC
+					sync tape and logfile	
+			
+				if [get next file == DUMP_FILE]
+					dump next file
+				else
+					continue
+			
+			sleep x seconds
+		else
+			print server message
+
+END FUNCTION
+
+
+FUNCTION get tape configuration
+
+/* 
+[tape]
+device=/dev/nst[x]
+datadir=[path]
+logdir=[path]
+tapesize=[x MB]
+retry=[n]
+*
+disksize=BH?.D,[x MB]
+disksize=LH?.D,[x MB]
+.
+.
+.
+disksize=UL?.D,[x MB]
+defdisksize=[x MB]
+* default,if no entry == [*]
+dumpstream=BH?.D
+.
+.
+.
+dumpstream=LH?.D
+*/
+
+	open conf file
+	read tape and disk inits to INFO
+	close conf file
+			
+END FUNCTION
+			
+		 
+
+

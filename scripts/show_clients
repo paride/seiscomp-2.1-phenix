@@ -1,0 +1,27 @@
+#!/bin/bash
+
+map_ips() {
+  while read ip; do
+    if [ "$ip" = "127.0.0.1" ]; then
+      continue
+    fi
+
+    reply="$(host $ip 2>/dev/null)"
+    
+    if [ "$?" != 0 ]; then
+      echo $ip
+    else
+      echo $reply | sed -e 's/\([^ ]* \)*//g'
+    fi
+  done
+}
+
+netstat -nt | 
+  egrep '^.{20}[^ ]*:18000' | 
+  sed -e 's/^.\{44\}\([^:]*\).*/\1/g' |
+  sort | uniq | map_ips
+
+# same with slinktool...
+# slinktool -C :18000 | sed -ne '4,${s/^.\{9\}\([^:]*\).*/\1/g;p;}' |
+#   sort | uniq | map_ips
+

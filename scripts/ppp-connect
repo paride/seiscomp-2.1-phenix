@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if [ $# -ne 2 ]; then
+    echo "Usage: ppp-connect <tty> <remote IP>"
+    exit 0
+fi
+
+localip=192.168.100.254
+remoteip=$2 
+device=$1
+speed=115200
+
+PPPD=/usr/sbin/pppd
+SETSID=/usr/bin/setsid
+flags="nodefaultroute noauth lcp-echo-interval 20 lcp-echo-failure 3 crtscts local lock"
+
+while :; do
+    $SETSID $PPPD $device $speed $localip:$remoteip $flags nodetach </dev/null >/dev/null 2>&1
+    sleep 10
+done
+ 

@@ -1,0 +1,9 @@
+#!/bin/sh
+
+while read line; do
+    echo "rq-> $line"
+    if echo "$line" | grep -q "^TEST_"; then
+        echo -ne "${line#TEST_}" 1>&63
+    fi
+done 0<&62
+

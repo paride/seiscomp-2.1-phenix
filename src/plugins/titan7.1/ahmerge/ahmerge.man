@@ -1,0 +1,73 @@
+.TH AHMERGE 1 "1 April 1990" @PASSCAL_REV "PASSCAL MANUAL PAGES"
+.SH NAME
+ahmerge \- merge or cut individual ah traces of continuous data into one
+common ah file.
+.SH SYNOPSIS
+\fBahmerge [ ah_file(s) -s start time -l length -t tolerance ] [ -h ]
+.SH DESCRIPTION
+\fBahmerge\fR reads an ah file from standard input or ah files specified on
+the command line and writes an ah file of one record
+to standard output.  If a start time and length are provided, an ah file is
+generated containing only the data requested by this start time and length.
+The input file(s) contain(s) individual ah records of
+continuous data.  The output file is an ah file of one record containing all 
+of the data requested from the input but with only one header.
+.LP
+.SH OPTIONS
+.TP
+\fB\-s \fIstart time\fR
+Specifies the starting time which will be used in determining the
+time window of the output.  
+The output begins with the data sample nearest to that time.
+If the input does not contain the given start time no output will be produced.
+The form of this time is as follows:  YY:MM:DD:HH:MM:SS  with all 
+abbreviations being obvious (hopefully).
+.TP
+\fB\-l \fIlength\fR
+Specifies the length of time from the start time which will be
+contained in the output ah file.  This value is given in seconds.
+In all cases save one, the output file will contain exactly \fIlength\fR
+seconds worth of data.  It will be truncated when \fIstart time\fR plus
+\fIlength\fR extends beyond the end of the the last data point in the input.
+.TP
+\fB-t \fItolerance\fR
+Specifies the maximum tolerance in milliseconds the program should take
+into account when checking the continuity of the data.  This is
+necessary when an instrument's clock jumps due to locking and
+unlocking.  The default value of \fItolerance\fR is 0 if not specified.
+.TP
+\fBah_file(s)\fR
+If specified, the program will attempt to read the ah file(s) appearing
+on the command line instead of reading from the standard input.  
+.TP
+\fB-h\fR
+This option returns the usage line.
+.LP
+If a start time and length are not chosen, \fBahmerge\fR makes an 
+attempt to merge all of the input ah records with no consideration of a
+starting time or length.  It should be obvious that the options \fB-s\fR
+and \fB-l\fR are
+mutually dependent, i.e. if one is specified, both must be specified.
+.LP
+\fBahmerge\fR requires that three header values in each ah record being
+processed be equivalent from record to record.  These three header values
+are the channel number of the instrument, the code (station name) of
+the instrument, and the sampling rate for this channel.  Further, the
+data in each record must be continuous.  The user need not be concerned with
+the input ordering of the ah records, \fBahmerge\fR takes care of the sorting.
+An example execution of \fBahmerge\fR might be:
+.nf
+
+  cat *.1.ah | ahmerge -s 90:4:6:19:44:50 -l 22200 >merged.1.ah
+or
+  ahmerge *.1.ah >merged.1.ah
+.fi
+.LP
+.SH DIAGNOSTICS
+When two files are found to be not continuous, a message is printed to stderr
+indicating to the user the number of milliseconds by which the two files
+differ.  This will allow the user to determine what value of \fItolerance\fR 
+to use when forcing the merging of two traces.
+.LP
+.SH AUTHOR
+Richard I. Boaz, February 1991.

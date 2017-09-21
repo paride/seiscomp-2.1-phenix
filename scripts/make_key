@@ -1,0 +1,491 @@
+#!/bin/bash
+
+SYSOP_HOME=`pwd`
+echo "SeisComP home directory: $SYSOP_HOME"
+echo ""
+
+if [ ! -r "$SYSOP_HOME/bin/keyutils.sh" ]; then
+    echo "Cannot read $SYSOP_HOME/bin/keyutils.sh"
+    exit 1
+fi
+
+source "$SYSOP_HOME/bin/keyutils.sh"
+
+GLOBAL_CFG="$SYSOP_HOME/templates/global.cfg"
+if [ ! -r "$GLOBAL_CFG" ]; then
+    echo "Cannot read $GLOBAL_CFG!"
+    exit 1
+fi
+
+STATION_CFG="$SYSOP_HOME/templates/keys.cfg"
+if [ ! -r "$STATION_CFG" ]; then
+    echo "Cannot read $STATION_CFG!"
+    exit 1
+fi
+
+VERSION="2.1"
+KEY_VERSION="2.1"
+
+ORGANIZATION="GEOFON DC"
+DEFAULTNET="GE"
+SYSOP="$LOGNAME"
+OPMAIL="$LOGNAME"
+DRMNAME="drm"
+DRMHOME="none"
+SEEDLINK="yes"
+DIGISERV="no"
+DATALINKS="no"
+LOCALSOURCE="seedlink"
+
+ICODE="iso-8859-1"
+ICONV="/usr/bin/iconv"
+
+if [ -f "$ICONV" ]; then
+    ENCODE="$ICONV -f $ICODE -t utf-8"
+    DECODE="$ICONV -f utf-8 -t $ICODE"
+else
+    ICODE="utf-8"
+    ENCODE="cat"
+    DECODE="cat"
+fi
+
+echo "Character encoding set to $ICODE"
+echo
+
+if [ -f "$SYSOP_HOME/key/global" ]; then
+    $DECODE < "$SYSOP_HOME/key/global" > key_global.tmp
+    source key_global.tmp
+    rm key_global.tmp
+fi
+
+Ask ORGANIZATION "Organization" "$ORGANIZATION"
+
+Ask DEFAULTNET "Default network code" "$DEFAULTNET"
+
+Ask SYSOP "Operator login name" "$SYSOP"
+
+DRM=yes
+if [ "$DRMHOME" = none ]; then
+    DRM=no
+fi
+
+AskYN SEEDLINK "Install SeedLink" "$SEEDLINK"
+
+if [ "$SEEDLINK" = yes ]; then
+    AskYN DIGISERV "Install Digiserv (required for triggering)" "$DIGISERV"
+
+    CLIENTS_DIGISERV=yes
+    if [ "$LOCALSOURCE" != digiserv ]; then
+        CLIENTS_DIGISERV=no
+    fi
+    
+    if [ "$DIGISERV" = yes ]; then
+        AskYN CLIENTS_DIGISERV "Connect local clients to Digiserv instead of SeedLink" "$CLIENTS_DIGISERV"
+    fi
+
+    LOCALSOURCE=seedlink
+    if [ "$CLIENTS_DIGISERV" = yes ]; then
+        LOCALSOURCE=digiserv
+    fi
+else
+    LOCALSOURCE=remote
+fi
+
+AskYN DRM "Install Data Request Manager (DRM)" "$DRM"
+
+DRMHOME=none
+if [ "$DRM" = yes ]; then
+    DRMHOME="$SYSOP_HOME"
+    Ask DRMNAME "DRM login name" "$DRMNAME"
+fi
+
+AskYN DATALINKS "Maintain datalog compatibility links in $SYSOP_HOME/data" "$DATALINKS"
+
+echo
+
+KEYDIR="$SYSOP_HOME/key"
+if [ ! -d "$KEYDIR" ]; then
+    echo "No key directory found - create one"
+    mkdir "$KEYDIR"
+fi
+
+DEFAULTNET="$(echo $DEFAULTNET | tr '[:lower:]' '[:upper:]' | 
+    sed -e 's/^[^A-Z0-9]*\([A-Z0-9]\{1,2\}\).*/\1/g')"
+
+echo "Writing $SYSOP_HOME/key/global..."
+OutputKeys $GLOBAL_CFG | $ENCODE | tee "$SYSOP_HOME/key/global" | $DECODE
+echo
+
+STATLIST=$(for f in `find $KEYDIR -type f ! -name global`; do
+    echo ${f##*_}
+done)
+
+NSTAT=0
+for F in $STATLIST; do
+    NSTAT=`expr $NSTAT + 1`
+done
+
+if [ $NSTAT = 0 ]; then
+    echo "Found no previous station"
+else
+    echo "Found $NSTAT previous station(s):" $STATLIST "- add a new one"
+fi
+
+ANSWER=""
+while [ "$ANSWER" != yes ]; do
+
+Ask STATION "Station code" ""
+Ask DESC "Station description" "GEOFON_Station"
+
+Ask NET "Network code" "$DEFAULTNET"
+
+STATION="$(echo $STATION | tr '[:lower:]' '[:upper:]' |
+    sed -e 's/^[^A-Z0-9]*\([A-Z0-9]\{1,5\}\).*/\1/g')"
+
+NET="$(echo $NET | tr '[:lower:]' '[:upper:]' |
+    sed -e 's/^[^A-Z0-9]*\([A-Z0-9]\{1,2\}\).*/\1/g')"
+
+STATID="$STATION"
+while echo "$STATLIST" | grep "\<$STATID\>" >/dev/null; do
+    STATBASE=`echo $STATID | sed -e 's/[0-9]*$//g'`
+    STATNUM=`echo $STATID | sed -e 's/^[^0-9]*//g'`
+    STATID="${STATBASE}$((STATNUM+1))"
+done
+
+echo "Allocated ID '$STATID' for station ${NET}_${STATION}"
+
+DIGITYP="none"
+PLUGIN="none"
+SRCADDR="none"
+SRCPORT="none"
+SLOT="none"
+UDPPORT="none"
+COMPORT="none"
+BAUDRATE="none"
+TERMPORT="none"
+SERIAL="none"
+AUTH="none"
+SPROC="none"
+UNIT="none"
+
+DIAL="no"
+DIAL_UPTIME="900"
+DIAL_SCHEDULE="0,30 * * * *"
+
+TRIG="no"
+
+if [ "$SEEDLINK" = yes ]; then
+    echo
+    echo " 0) SeedLink server (TCP/IP)"
+    echo " 1) LISS server (TCP/IP)"
+    echo " 2) Quanterra Q380/Q680, Q4120, Q720 (RS-232)"
+    echo " 3) Quanterra Q330 (UDP/IP)"
+    echo " 4) Earth Data PS2400/PS6-24 digitizer (obsolete; RS-232)"
+    echo " 5) Earth Data PS2400/PS6-24 digitizer (firmware >= 2.23; RS-232)"
+    echo " 6) Earth Data PS2400/PS6-24 digitizer (firmware >= 2.23; TCP/IP)"
+    echo " 7) Lennartz M24 digitizer (RS-232)"
+    echo " 8) Guralp DM24 digitizer (RS-232)"
+    echo " 9) Geotech DR24 digitizer (RS-232)"
+    echo "10) Nanometrics HRD24 digitizer (RS-232)"
+    echo "11) Antelope ORB (TCP/IP)"
+    echo "12) RefTek RTPD (TCP/IP)"
+    echo "13) IRIS/IDA NRTS (TCP/IP)"
+    echo "14) NAQS server (TCP/IP)"
+    echo "15) Earthworm export server (TCP/IP)"
+    echo "16) SCREAM server (UDP/IP)"
+    echo "17) WIN server (UDP/IP)"
+    echo "18) MK6"
+    echo "19) SEISAN (data files)"
+    Ask DIGID "Data source" 0
+   
+    case "$DIGID" in
+        1)
+            DIGITYP="none"
+            PLUGIN="liss"
+            SPROC="none"
+            ;;
+        2)
+            DIGITYP="quanterra"
+            PLUGIN="comserv"
+            SPROC="none"
+            ;;
+        3)
+            DIGITYP="q330"
+            PLUGIN="q330"
+            SPROC="q330"
+            ;;
+        4)
+            DIGITYP="ps2400"
+            PLUGIN="ps2400"
+            SPROC="edata_100"
+            ;;
+        5)
+            DIGITYP="ps2400_r"
+            PLUGIN="ps2400_r"
+            SPROC="edata_100"
+            ;;
+        6)
+            DIGITYP="ps2400_eth"
+            PLUGIN="ps2400_eth"
+            SPROC="edata_100"
+            ;;
+        7)
+            DIGITYP="m24"
+            PLUGIN="m24"
+            SPROC="lennartz_100"
+            ;;
+        8)
+            DIGITYP="guralp"
+            PLUGIN="guralp"
+            SPROC="generic_3x20"
+            ;;
+        9)
+            DIGITYP="dr24"
+            PLUGIN="dr24"
+            SPROC="dr24_50"
+            ;;
+        10)
+            DIGITYP="hrd24"
+            PLUGIN="hrd24"
+            SPROC="generic_6x100"
+            ;;
+        11)
+            DIGITYP="none"
+            PLUGIN="antelope"
+            SPROC="none"
+            ;;
+        12)
+            DIGITYP="none"
+            PLUGIN="reftek"
+            SPROC="reftek"
+            ;;
+        13)
+            DIGITYP="none"
+            PLUGIN="nrts"
+            SPROC="nrts"
+            ;;
+        14)
+            DIGITYP="none"
+            PLUGIN="naqs"
+            SPROC="stream_20"
+            ;;
+        15)
+            DIGITYP="none"
+            PLUGIN="ewexport"
+            SPROC="stream_20"
+            ;;
+        16)
+            DIGITYP="none"
+            PLUGIN="scream"
+            SPROC="stream_50"
+            ;;
+        17)
+            DIGITYP="none"
+            PLUGIN="win"
+            SPROC="generic_100"
+            ;;
+        18)
+            DIGITYP="none"
+            PLUGIN="mk6"
+            SPROC="stream_20"
+            ;;
+        19)
+            DIGITYP="none"
+            PLUGIN="seisan"
+            SPROC="generic_3x50"
+            ;;
+        *)
+            DIGITYP="none"
+            PLUGIN="chain"
+            SPROC="none"
+    esac
+
+    if [ "$SPROC" != "none" ]; then
+        Ask SPROC "Stream processing scheme" "$SPROC"
+        echo
+        echo "Make sure that your actual digitizer/DAS setup matches the stream"
+        echo "processing scheme \"$SPROC\" in streams.xml!"
+        echo
+    fi
+    
+    if [ "$PLUGIN" = "chain" ]; then
+        Ask SRCADDR "IP address or hostname"
+        Ask SRCPORT "TCP port" "18000"
+
+        echo
+        echo "0) Real-time"
+        echo "1) Dial-up"
+        Ask SEEDLINK_MODE "SeedLink mode" 0
+
+        if [ "$SEEDLINK_MODE" = 1 ]; then
+            DIAL=yes
+            Ask DIAL_SCHEDULE "Dial-up schedule" "$DIAL_SCHEDULE"
+            Ask DIAL_UPTIME "Uptime" "$DIAL_UPTIME"
+        else
+            DIAL=no
+        fi
+
+        Ask SELECTORS "Stream selectors"
+    
+    elif [ "$PLUGIN" = "liss" ]; then
+        Ask SRCADDR "IP address or hostname" "$STATION.$NET.liss.org"
+        Ask SRCPORT "TCP port" "4000"
+
+    elif [ "$PLUGIN" = "nrts" ]; then
+        Ask SRCADDR "IP address or hostname" "idahub.ucsd.edu"
+        Ask SRCPORT "TCP port" "39136"
+
+    elif [ "$PLUGIN" = "naqs" ]; then
+        Ask SRCADDR "IP address or hostname" "127.0.0.1"
+        Ask SRCPORT "TCP port" "28000"
+
+	echo
+	echo "By default 20Hz data streams are requested from the NAQS server"
+	echo "If different data streams are desired the config/seedlink.ini and"
+	echo "config/streams.xml will need to be edited."
+	echo
+
+    elif [ "$PLUGIN" = "scream" ]; then
+        Ask SRCPORT "local UDP port" "1567"
+
+	echo
+	echo "After 'make_conf' you must edit config/scream2sl.map"
+	echo "This file maps SCREAM's streamnames to station and channel names"
+	echo
+
+    elif [ "$PLUGIN" = "win" ]; then
+        Ask SRCPORT "local UDP port" "18000"
+
+	echo
+	echo "After 'make_conf' you may need to edit config/win2sl.map"
+	echo "This file maps WIN channel IDs to station and channel names"
+	echo
+
+    elif [ "$PLUGIN" = "antelope" ]; then
+        Ask SRCADDR "IP address or hostname" "127.0.0.1"
+        Ask SRCPORT "TCP port" "8301"
+
+	echo
+	echo "The Antelope ORB plugin is not distributed with the SeisComP"
+	echo "distribution because it requires the Antelope dynamic run-time"
+	echo "libraries.  For this reason you must download the source code"
+	echo "and compile it with your local Antelope installation."
+	echo "The most current orb_plugin source code can be found at:"
+	echo "ftp://orfeus.knmi.nl/pub/software/seiscomp/"
+	echo
+	echo "After compiling the plugin you must copy the binary (orb_plugin)"
+	echo "to the SeisComP bin directory (e.g. /home/sysop/bin)"
+	echo
+
+    elif [ "$PLUGIN" = "q330" ]; then
+        Ask SRCADDR "IP address of Q330"
+        Ask SRCPORT "Base UDP port of Q330" "5330"
+        Ask SLOT "Q330 dataport (1-4)" "1"
+        Ask SERIAL "Q330 serial number" "0x0100000123456789"
+        Ask AUTH "Q330 auth code" "0x00"
+        Ask UDPPORT "Base UDP port on the SeisComP" "5500"
+
+    elif [ "$PLUGIN" = "reftek" ]; then
+        Ask SRCADDR "IP address or hostname of RTPD" "127.0.0.1"
+        Ask SRCPORT "TCP port of RTPD" "2543"
+        Ask UNIT "Unit ID" "91F3"
+        UNIT="$(echo $UNIT | tr '[:lower:]' '[:upper:]')"
+
+    elif [ "$PLUGIN" = "ewexport" ]; then
+        Ask SRCADDR "IP address or hostname of Earthworm export server"
+        Ask SRCPORT "TCP port of Earthworm export server"
+    
+    elif [ "$PLUGIN" = "ps2400_eth" ]; then
+        Ask SRCADDR "IP address of digitizer"
+        Ask SRCPORT "TCP port of digitizer" "1411"
+
+    elif [ "$DIGITYP" != "none" ]; then
+        Ask COMPORT "Data port" "/dev/data"
+        Ask BAUDRATE "Baud rate" "19200"
+    fi
+
+    if [ "$DIGITYP" = "quanterra" ]; then
+        Ask TERMPORT "Terminal port" "/dev/terminal"
+    fi
+
+    if [ "$DIGISERV" = yes ]; then
+        AskYN TRIG "Triggered HH streams" "no"
+        if [ "$TRIG" = yes ]; then
+            echo
+            echo "Check also trigger parameters in trigger.ini!"
+            echo
+        fi
+    fi
+
+else
+
+    DIGITYP="none"
+    PLUGIN="none"
+
+    Ask SRCADDR "IP address or hostname"
+    Ask SRCPORT "TCP port" "18000"
+
+fi
+
+COMSERV=yes
+if [ "$DIGITYP" != quanterra ]; then
+    AskYN COMSERV "Install Comserv" "no"
+fi
+
+SEGID="`expr $NSTAT \* 2 + 9600`"
+PLOT="no"
+PLOT_FILTER="WWSSSP"
+PLOT_MAGN="50000"
+PLOT_SIZE="1024x780"
+PLOT_KEEP="30"
+
+DATALOG="no"
+
+if [ "$COMSERV" = yes ]; then
+    Ask SEGID "ComServ segment ID" "$SEGID"
+
+    if [ "$DATALINKS" = no ]; then
+        AskYN DATALOG "Install datalog" "no"
+    fi
+fi
+
+AskYN SLARCHIVE "Install slarchive" "yes"
+
+TAPE=none
+DEFSIZE=50
+if [ "$DATALOG" = yes ]; then
+#    Ask TAPE "Tape device" "none"
+    Ask DEFSIZE "Default disksize in MB per stream ($SYSOP_HOME/data)" 50
+fi
+
+Ask DATA_KEEP "Maximum number of days to keep datafiles" 50
+
+Ask PLOT_FILTER "slqplot filter" "WWSSSP"
+Ask PLOT_MAGN "slqplot magnification factor" 50000
+AskYN PLOT "Install permanent slqplot daemon for GIF-file creation" "no"
+
+if [ "$PLOT" = yes ]; then
+    Ask PLOT_SIZE "GIF-file size" "1024x780"
+    Ask PLOT_KEEP "Number of days to keep old GIF-files" "30"
+fi
+
+
+echo ""
+echo "Resulting key file:"
+echo ""
+
+OutputKeys $STATION_CFG
+
+echo
+
+AskYN ANSWER "OK?" "yes"
+
+done
+
+echo "Write key file $KEYDIR/key_$STATID..."
+echo ""
+
+OutputKeys $STATION_CFG | $ENCODE > $KEYDIR/key_$STATID
+
+echo "...done"
+

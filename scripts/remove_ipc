@@ -1,0 +1,10 @@
+#!/bin/sh
+
+for i in `ipcs -m | awk '/^0x/ { print $2 }'`; do
+    ipcrm shm $i
+done
+
+for i in `ipcs -s | awk '/^0x/ { print $2 }'`; do
+    ipcrm sem $i
+done
+

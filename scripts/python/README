@@ -1,0 +1,7 @@
+chkdata.py and chkcontent.py are experimental Python scripts for creating
+SDS "content files" and data quality reports. Should be called from crontab
+as follows:
+
+30 * * * * /home/sysop/bin/chkdata > /dev/null 2>&1
+0 6 * * * /home/sysop/bin/chkcontent > /dev/null 2>&1
+

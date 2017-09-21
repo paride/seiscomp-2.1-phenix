@@ -1,0 +1,418 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/mtio.h>
+#include <signal.h>
+#include <string.h>
+#include <errno.h>
+#include "dpstruc.h"
+#include "seedstrc.h"
+#include "stuff.h"
+#include "timeutil.h"
+#include "cfgutil.h"
+#include "Tape.h"
+
+extern void perror();
+
+static int   NextRecord     ( char*, int);
+static int   NextEofMark    ( void );
+static int   CheckAnswer    ( int );
+
+struct mtop  sMaTapeCom;        /* tape command structure                    */
+struct mtget sMaTapeStat;       /* tape status structure                     */
+
+static int  fdTape;             /* tape file descritor                       */
+static int  iGBlocks  = 0L,
+            iPBlocks  = 0L;
+static int  iNewFile  = TRUE;
+static int  iEofCount = 0L; 
+
+
+/* ==========================================================================
+   Rewind the tape
+   ========================================================================== */
+
+int TapeRewind( void )
+{
+int iAnswer;
+
+    sMaTapeCom.mt_op    = MTREW;
+    sMaTapeCom.mt_count = 1;
+
+    iAnswer = ioctl( fdTape, MTIOCTOP, &sMaTapeCom );
+    if( iAnswer == 0 ) {
+#ifdef DEBUG
+        fprintf( stderr, "\n#Tape rewinded ...\n" );
+#endif  
+                iEofCount = 0L;
+        return( (int)SUCCESS );
+     } else {
+        fprintf( stderr, "\nCan't rewind Tape ...\n" );
+        return( (int)FAILURE );
+    }
+}
+
+/* ==========================================================================
+   Close the tape
+   ========================================================================== */
+int  TapeClose( void )
+{
+#ifdef DEBUG
+        fprintf( stderr, "\n#Closing tape device ...\n" );
+#endif
+    iEofCount = 0L;
+    close( fdTape );
+    return( (int)0 );
+}
+
+/* ==========================================================================
+   Open the tape
+   ==========================================================================
+int TapeOpen( char* cpDeviceName )
+{
+char caTmp[256];
+
+    if( (fdTape = open( cpDeviceName, O_RDWR|O_SYNC )) > 0 ) {
+        iEofCount = 0L;
+        iNewFile = TRUE;
+        return( SUCCESS );
+    } else {
+#ifdef DEBUG
+        sprintf(caTmp,"\nERROR: open error on device [%s]", cpDeviceName);
+        perror( caTmp );
+#endif
+    }
+    return( TAPE_ERROR );
+}
+
+/* ==========================================================================
+   Read next block on tape
+   ==========================================================================
+int TapeRead( char*cpBuffer, int iSizeOfBuf )
+{
+int iAnswer;
+
+
+    if( iNewFile == FALSE ) {
+#ifdef DEBUG
+        fprintf( stderr, "\n<TapeRead> read blocks (%d + %d)\n",iGBlocks
+                                                           ,iPBlocks );
+        iPBlocks = 0;
+        iGBlocks = 0;
+#endif
+        iNewFile = TRUE;
+    }
+    iAnswer = NextRecord( cpBuffer, iSizeOfBuf );
+
+    if( iAnswer == 0 ) {
+        iEofCount++;
+        iNewFile = FALSE;
+        if( iEofCount == 1 )
+                return( (int)EOF_MARK );
+        else
+            return( (int)EOT_MARK );
+    } else if( iAnswer == iSizeOfBuf ) {
+#ifdef DEBUG
+        iGBlocks++;
+#endif
+        iEofCount = 0L;         
+        return( (int)SUCCESS );         
+    } else if( iAnswer > 0 && iAnswer != iSizeOfBuf ) {
+#ifdef DEBUG
+        iPBlocks++;
+#endif          
+        iEofCount++;
+        iNewFile = FALSE;
+        return( (int)EOF_MARK );
+    } else {
+#ifdef DEBUG
+        fprintf( stderr, "\nREAD ERROR: <TapeRead> read blocks (%d + %d)\n",iGBlocks
+                                                           ,iPBlocks );
+#endif
+        iNewFile = FALSE;
+        return( (int)READ_ERR );
+    }
+}
+
+==========================================================================
+   Read the block via read() on tape
+   ========================================================================== */
+static int NextRecord( char* cpBuffer, int iSizeOfBuf )
+{
+int  iAnswer;
+
+    return( iAnswer = read(fdTape, cpBuffer, iSizeOfBuf) );
+}
+
+==========================================================================
+   write buffer write() on tape
+   ========================================================================== */
+int TapeWriteBlk( char* cpBuffer, int iSizeOfBuf )
+{
+int  iAnswer;
+ 
+    return( iAnswer = write(fdTape, cpBuffer, iSizeOfBuf) );
+}
+
+
+==========================================================================
+   Skip over EOF mark to continue reading  with next file 
+   ========================================================================== */
+static int NextEofMark( void )
+{
+int iAnswer;
+
+    sMaTapeCom.mt_op    = MTFSF;
+    sMaTapeCom.mt_count = 1;
+
+    iAnswer = ioctl( fdTape, MTIOCTOP, &sMaTapeCom );
+    ioctl( fdTape, MTIOCGET, (char*)&sMaTapeStat);  
+
+    if( CheckAnswer(iAnswer) ) {
+        perror( "\nioctl ERROR in NextEofMark ..." );
+        return( FAILURE );
+    } else {
+#ifdef DEBUG
+        fprintf( stderr, "\nNextEofMark kipped over next EOF mark\n" );
+#endif
+        return( SUCCESS );
+    } 
+}
+
+/* ==========================================================================
+   Skip over n EOF marks 
+   ========================================================================== */
+int TapeSkipEOF( int iEofMarks )
+{
+int iAnswer;
+
+    sMaTapeCom.mt_op    = MTFSF;
+    sMaTapeCom.mt_count = iEofMarks;
+
+    iAnswer = ioctl( fdTape, MTIOCTOP, &sMaTapeCom );
+    ioctl( fdTape, MTIOCGET, (char*)&sMaTapeStat);  
+
+    if( CheckAnswer(iAnswer) ) {
+         perror( "\n#ioctl ERROR" );
+         return( FAILURE );
+    } else {
+#ifdef DEBUG
+        fprintf( stderr, "\nTapeSkipEOF skipped over %d EOF marks ...\n", iEofMarks );
+#endif
+        return( SUCCESS );
+    } 
+}
+
+/* =========================================================================
+   Read first block after next EOF mark
+   ========================================================================== */
+int GetFirstDataRec( char* cpBuffer, int iSizeOfBuf ) {
+int skipstat;
+int readstat;
+
+    if( (skipstat = NextEofMark( )) != SUCCESS )
+        return( FAILURE );
+    if( (readstat = TapeRead(cpBuffer, iSizeOfBuf)) != SUCCESS )
+        return( FAILURE );
+    else
+        return( SUCCESS );
+}
+
+/* =========================================================================
+   Skip to end of media
+   ========================================================================== */    
+int TapeSkipToEOM( void ) {
+int iAnswer;
+
+    sMaTapeCom.mt_op    = MTEOM;
+    sMaTapeCom.mt_count = 1;
+
+    iAnswer = ioctl( fdTape, MTIOCTOP, &sMaTapeCom );
+    ioctl( fdTape, MTIOCGET, (char*)&sMaTapeStat);  
+
+    if( CheckAnswer(iAnswer) ) {
+        perror( "\n#ioctl ERROR" );
+        return( FAILURE );
+    } else {
+#ifdef DEBUG
+        fprintf( stderr, "\nTapeSkipEOM skipped to EOM ...\n" );
+#endif
+        return( SUCCESS );
+    }
+        
+}
+
+/* =========================================================================
+   Skip first record in current file
+   ========================================================================== */    
+int TapeSkipfirstRec( void ) {
+int iAnswer;
+
+        sMaTapeCom.mt_op    = MTEOM;
+    sMaTapeCom.mt_count = 1;
+
+    iAnswer = ioctl( fdTape, MTIOCTOP, &sMaTapeCom );
+    ioctl( fdTape, MTIOCGET, (char*)&sMaTapeStat);  
+
+    if( CheckAnswer(iAnswer) ) {
+        perror( "\n#ioctl ERROR" );
+        return( FAILURE );
+    } else {
+#ifdef DEBUG
+        fprintf( stderr, "\nTapeSkipEOM skipped to EOM ...\n" );
+#endif
+        return( SUCCESS );
+    }  
+}
+
+/* =========================================================================
+   Write a EOF mark
+   ========================================================================== */    
+int TapeWriteEOF( void ) {
+int iAnswer;
+
+    sMaTapeCom.mt_op    = MTWEOF;
+    sMaTapeCom.mt_count = 1;
+
+    iAnswer = ioctl( fdTape, MTIOCTOP, &sMaTapeCom );
+    ioctl( fdTape, MTIOCGET, (char*)&sMaTapeStat);  
+
+    if( CheckAnswer(iAnswer) ) {
+        perror( "\n#ioctl ERROR" );
+        return( FAILURE );
+    } else {
+#ifdef DEBUG
+        fprintf( stderr, "\nTapeWriteEOF writing EOF mark ...\n" );
+#endif
+        return( SUCCESS );
+    }    
+}
+
+/* =========================================================================
+   Check return code form IOCTL
+   ========================================================================== */
+int CheckAnswer( int code ) {
+
+    switch( code ) {
+        case EIO:
+        case ENOSPC:
+        case EACCES:
+        case ENXIO:
+        case EBUSY:
+        case EOVERFLOW:
+        case EINVAL:
+        case ENOSYS:
+            return( FAILURE );
+            break;
+        default:
+            return( SUCCESS );
+    }
+}
+   
+/* ==========================================================================
+   Get status of Tape device
+   
+   returns - TAPE_BUSY       tape device already in use
+             TAPE_READY      tape is ready for writing
+             TAPE_BOM        tape is at begin of data medium
+             TAPE_EOM        tape is at end of media
+             TAPE_NO_TAPE    no tape in place
+             TAPE_NO_WRITE   tape is write protected
+             TAPE_ERROR      tape is positioned at the beginning
+               
+   ========================================================================== */
+int GetTapeStatus( LINFO *dumpinfo )
+{
+int iAnswer;
+
+        iAnswer = ioctl( fdTape, MTIOCGET, &sMaTapeStat );
+        
+        dumpinfo->tape_record_no = sMaTapeStat.mt_blkno;
+        dumpinfo->tape_file_no   = sMaTapeStat.mt_fileno;
+        dumpinfo->tape_status    = sMaTapeStat.mt_gstat;        
+
+#ifdef DEBUG_DUMP
+        fprintf( stderr, "\nioctl()     (%d)",iAnswer);
+        fprintf( stderr, "\nGMT_EOF     (%d)",GMT_EOF(sMaTapeStat.mt_gstat));
+        fprintf( stderr, "\nGMT_EOT     (%d)",GMT_EOT(sMaTapeStat.mt_gstat));
+        fprintf( stderr, "\nGMT_BOT     (%d)",GMT_BOT(sMaTapeStat.mt_gstat));
+        fprintf( stderr, "\nGMT_WR_PROT (%d)",GMT_WR_PROT(sMaTapeStat.mt_gstat));
+        fprintf( stderr, "\nGMT_ONLINE  (%d)",GMT_ONLINE(sMaTapeStat.mt_gstat));
+        fprintf( stderr, "\nGMT_DR_OPEN (%d)",GMT_DR_OPEN(sMaTapeStat.mt_gstat));
+        fprintf( stderr, "\nGMT_SM      (%d)",GMT_SM(sMaTapeStat.mt_gstat));
+        fprintf( stderr, "\nGMT_EOD     (%d)",GMT_EOD(sMaTapeStat.mt_gstat));
+#endif
+                
+        if( iAnswer == EBUSY )  
+            return(TAPE_BUSY);
+        else if( GMT_DR_OPEN(sMaTapeStat.mt_gstat) )  
+            return(TAPE_NO_TAPE); 
+        else if( GMT_WR_PROT(sMaTapeStat.mt_gstat) ) 
+            return(TAPE_NO_WRITE);
+        else if( (GMT_BOT(sMaTapeStat.mt_gstat)   || 
+                  GMT_EOF(sMaTapeStat.mt_gstat))  &&
+                  GMT_ONLINE(sMaTapeStat.mt_gstat)) {
+            return(TAPE_READY);
+        } else {
+            return(TAPE_ERROR);
+        }
+}
+
+/* =========================================================================
+   Copy a file from disk to tape
+   ========================================================================== */
+int CopyFileToTape ( LINFO *dumpinfo, char* cpFileName ) {
+long    lFileSize;
+int     fdSrc;
+int     fdDest;
+struct stat statbuf;
+char    caBuf[WR_BLK_SIZE];
+int     iReadBytes;
+
+        if( (fdSrc = open(cpFileName, O_RDONLY)) < 0 ) {
+            fprintf( stderr, "\nCan't open source file %s", cpFileName );
+            close(fdSrc);
+            return( FAILURE );
+        }
+        
+        if( stat( cpFileName, &statbuf ) == 0 ) {
+            lFileSize = statbuf.st_size;
+            dumpinfo->dumpsize = lFileSize;
+        } else {
+            LogError( dumpinfo );
+            close(fdSrc);
+            return( FAILURE );
+        }
+        
+        do {
+            iReadBytes = read( fdSrc, &caBuf[0], WR_BLK_SIZE );
+            if( iReadBytes < 0 ) {
+                LogError( dumpinfo );
+                close(fdSrc);
+                return( FAILURE );
+            } else if( iReadBytes > 0 ) {
+                if( TapeWriteBlk( &caBuf[0], WR_BLK_SIZE) == FAILURE ) {
+                    LogError( dumpinfo );
+                    close(fdSrc);
+                    return(FAILURE);
+                }
+                lFileSize -= iReadBytes;
+            }
+        } while( iReadBytes != 0 );
+        
+        close(fdSrc);
+        if( lFileSize != 0 ){
+            LogError( dumpinfo );
+            return( FAILURE );
+        } else {
+            LogSuccess( dumpinfo ); 
+            return( TapeWriteEOF() );
+        }       
+}
+
+
+

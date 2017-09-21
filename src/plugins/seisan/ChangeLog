@@ -1,0 +1,10 @@
+2003.9.29:
+	- Update to SeisAn version 8 sources.
+	- Re-apply the 3 "form='unformatted'" changes to wave.for noted
+	below.
+
+2003.9.8:
+	- Updated to SeisAn source (seisan_source.Z) dated 29-Jan-2003.
+	- Added "form='unformatted'" to the open statements in wave.for 
+	that read SeisAn data files to get the library to work 
+	consistently with g77 and associated libraries.

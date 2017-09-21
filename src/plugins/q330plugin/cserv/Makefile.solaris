@@ -1,0 +1,24 @@
+BASEDIR = ../../..
+SLUTILSDIR = $(BASEDIR)/libslutils
+SLPLUGINSDIR = $(BASEDIR)/libslplugin
+QDIR   = $(BASEDIR)/qlib2
+
+CXX = g++
+CXXFLAGS = -Wall -O2
+
+all: libcserv.a
+
+.PHONY: all depend clean
+
+libcserv.a: qmacserv.o
+	ar -cr $@ $+
+
+qmacserv.o: qmacserv.cc qmacserv.h
+	$(CXX) $(CXXFLAGS) -I$(SLUTILSDIR) -I$(SLPLUGINSDIR) -I$(QDIR) -c $< -o $@
+
+depend:
+	$(CXX) $(CXXFLAGS) -I$(SLUTILSDIR) -I$(SLPLUGINSDIR) -I$(QDIR) -MM *.c *.cc > .depend
+
+clean:
+	$(RM) libcserv.a qmacserv.o
+

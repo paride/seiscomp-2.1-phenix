@@ -1,0 +1,4 @@
+This directory contains Python interface for implementing SeedLink plugins
+and chain_plugin extensions in Python. Python and Pyrex packages must be
+installed to compile the code.
+

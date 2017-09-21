@@ -1,0 +1,1 @@
+slqplot     run_with_lock #home_sysop#/status/#statid#.slqplot.pid slqplot -i -v -f #home_sysop#/config/slqplot_#statid# -F #home_sysop#/config/slqplot.coef -x #home_sysop#/status/#statid#.slqplot.state -S #netid#_#station#:BH?.D -c gif #srcaddr#:#srcport#

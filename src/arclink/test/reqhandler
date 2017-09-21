@@ -1,0 +1,36 @@
+#!/bin/sh
+
+while read line; do
+    if echo $line | grep -q ^END; then
+        break
+    fi
+done 0<&62
+
+cat << EOF 1>&63
+STATUS LINE 0 PROCESSING malt-local
+STATUS LINE 1 PROCESSING geofon-local
+STATUS LINE 2 PROCESSING malt-local
+STATUS LINE 3 PROCESSING malt-local
+STATUS LINE 4 PROCESSING malt-local
+STATUS VOLUME malt-local MESSAGE Expected processing time 10 minutes
+STATUS VOLUME geofon-local MESSAGE Expected processing time 5 minutes
+STATUS LINE 0 MESSAGE Time-window temporarily unavailable
+STATUS LINE 0 RETRY
+STATUS LINE 2 MESSAGE Non-existent location code
+STATUS LINE 2 NODATA
+STATUS LINE 3 MESSAGE 1147392 bytes
+STATUS LINE 3 OK
+STATUS LINE 4 MESSAGE Time-window not available
+STATUS LINE 4 NODATA
+STATUS LINE 1 MESSAGE Time-window not available
+STATUS LINE 1 NODATA
+STATUS VOLUME malt-local MESSAGE Not all time windows available
+STATUS VOLUME malt-local SIZE 15
+STATUS VOLUME malt-local OK
+STATUS VOLUME geofon-local MESSAGE None of the time windows found
+STATUS VOLUME geofon-local NODATA
+END
+EOF
+
+cat >/dev/null 0<&62
+

@@ -1,0 +1,88 @@
+esstf_plugin version: 2002.119 (intel+sparc)
+--------------------------------------------
+
+Mathias Hoffmann
+Alfred-Wegener-Institut, Bremerhaven
+Columbusstr.
+D-27568 Bremerhaven
+Germany
+
+mhoffmann@awi-bremerhaven.de
+
+
+INSTALL:
+Edit the file "esstf_config.h" to set your esstf stream parameters and then type
+make to compile the plugin.
+
+DESCRIPTION:
+With this plugin for the seedlink server, it is possible to read in esstf data
+from a file or a continuous feeded named pipe (fifo). It works well with data
+coming into a Sun workstation via an IEEE 488 interface from a Lennartz PCM
+5800. The data is send in datablocks of 2048 byte size for each channel. 
+
+datablock structure:
+- 48 byte ASCII header
+  channel no, time info, ...
+    
+- 2000 byte 4 byte data 
+  1+2 byte: data
+    3 byte: gain ranging
+    4 byte: digital byte (SOH, DCF time info)
+
+look into the sourcecode for details.
+
+The esstf datablock contains two time informations: one in the header (ASCII
+time info) and the second encoded in the data of channel 0 (DCF time info). I
+use primarily the DCF time and as fallback the ASCII time. Both are from the same
+source, but I found, that the DCF encoded time is more reliable. The ASCII time
+often contains errors.
+
+If you invoke the program without arguments, you'll get a brief information:
+
+[mhoffman@gphs15] src/esstf_plugin> esstf_plugin 
+esstf_plugin version: 2002.119 (sparc)
+Mathias Hoffmann, AWI Bremerhaven
+usage:   esstf_plugin [options] <esstf file or fifo>
+options: -d     dump header information
+         -a<ch> dump ascii data for channel ch
+         -s     don't send data to seedlink server
+         -f     file operation; exit at end of file, don't loop
+         -h     help message
+default: send data to seedlink server
+
+
+	
+EXAMPLES:
+
+o  configuration in seedlink.ini:
+   (but don't forget to set the full pathname)
+   "ACT_ESSTF_DATA" is the named pipe (fifo) feeded by your
+   data acquisition system
+   
+   plugin esstf cmd="/your_path/esstf_plugin /your_path/ACT_ESSTF_DATA"
+
+o  to dump the data values from file test.dat to ch9.dat
+   in ASCII format from channel 9 
+   with header information before each datablock
+   
+   > esstf_plugin -sf -d -a9 test.dat > ch9.dat
+   
+o  the same, but only pure ASCII data
+   
+   > esstf_plugin -sf -a9 test.dat > ch9.dat 
+   
+o  read the named pipe "ACT_ESSTF_DATA" and pipe the ASCII data from 
+   channel 12 to a display programm "seisview"
+   
+   > esstf_plugin -s -a 12 ACT_ESSTF_DATA | seisview
+   
+   
+
+TO DO:
+
+- If there are no corrections (seismometer transfer functions) applyed to the
+  esstf data in a former stage of the data acquisition process, you have to do
+  it by your self! This plugin passes the data to the stream processor without
+  touching them. Next I will add some correction functionality.
+
+- plugin.ini configuration file support

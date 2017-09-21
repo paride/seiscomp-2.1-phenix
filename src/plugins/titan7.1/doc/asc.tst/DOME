@@ -1,0 +1,3 @@
+#!/bin/csh -f
+
+cvtit /d2/nice/19980919/19980919.tit -asc chan=2 comp=0 eof=1000000 sta=XXX

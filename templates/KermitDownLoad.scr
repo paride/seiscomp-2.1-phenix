@@ -1,0 +1,39 @@
+set escape 24
+robust
+ 
+set     send pathnames off
+clear   send-list
+set file type binary
+ 
+xif exist DownFiles.kermit {
+        take DownFiles.kermit
+} else {
+        echo No file list found ... exiting ...,quit
+} 
+ 
+echo
+echo      !! FOR DOWNLOAD RETURN TO YOUR LOCAL KERMIT !!
+echo
+echo To return to your local kermit, type your escape sequence.
+echo
+echo At your local kermit prompt type 
+echo
+echo SET FILE TYPE BIN
+echo RECEIVE 
+echo 
+echo After the file download has finished, type 
+echo
+echo CONNECT 
+echo <RETURN>
+echo
+echo to go back to the Data Request Manager.
+echo 
+echo
+echo The transmission will be started in 20 seconds ...
+echo 
+ 
+pause 20
+ 
+send
+ 
+quit

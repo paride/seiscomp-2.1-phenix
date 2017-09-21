@@ -1,0 +1,10 @@
+<?xml version="1.0" standalone="yes"?>
+<data>
+  <blah name="blah1" anInteger="10" aString="a string">
+    <subblah name="aName" aParameter="myvalue"/>
+  </blah>
+  <blah name="blah2" anInteger="20" aString="string2">
+    <subblah name="aName2" aParameter="myvalue2"/>
+  </blah>
+</data>
+

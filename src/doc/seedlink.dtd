@@ -1,0 +1,51 @@
+<!ELEMENT seedlink (capability*, station*)>
+<!ATTLIST seedlink
+          software          CDATA #REQUIRED
+          organization      CDATA #REQUIRED
+          started           CDATA #REQUIRED>
+<!ELEMENT capability EMPTY>
+<!ATTLIST capability
+          name              CDATA #REQUIRED>
+<!ELEMENT station (stream*, connection*)>
+<!ATTLIST station
+          name              CDATA #REQUIRED
+          network           CDATA #REQUIRED
+          description       CDATA #REQUIRED
+          begin_seq         CDATA #REQUIRED
+          end_seq           CDATA #REQUIRED
+          stream_check      (enabled | disabled) #REQUIRED>
+<!ELEMENT stream (gap*)>
+<!ATTLIST stream
+          location          CDATA #REQUIRED
+          seedname          CDATA #REQUIRED
+          type              CDATA #REQUIRED
+          begin_time        CDATA #REQUIRED
+          end_time          CDATA #REQUIRED
+          begin_recno       CDATA #REQUIRED
+          end_recno         CDATA #REQUIRED
+          gap_check         (enabled | disabled) #REQUIRED
+          gap_treshold      CDATA #REQUIRED>
+<!ELEMENT gap EMPTY>
+<!ATTLIST gap
+          begin_time        CDATA #REQUIRED
+          end_time          CDATA #REQUIRED>
+<!ELEMENT connection (window?, selector*)>
+<!ATTLIST connection
+          host              CDATA #REQUIRED
+          port              CDATA #REQUIRED
+          ctime             CDATA #REQUIRED
+          begin_seq         CDATA #REQUIRED
+          current_seq       CDATA #REQUIRED
+          sequence_gaps     CDATA #REQUIRED
+          txcount           CDATA #REQUIRED
+          begin_seq_valid   (yes | no) #REQUIRED
+          realtime          (yes | no) #REQUIRED
+          end_of_data       (yes | no) #REQUIRED>
+<!ELEMENT window EMPTY>
+<!ATTLIST window
+          begin_time        CDATA #REQUIRED
+          end_time          CDATA #REQUIRED>
+<!ELEMENT selector EMPTY>
+<!ATTLIST selector
+          pattern           CDATA #REQUIRED>
+

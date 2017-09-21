@@ -1,0 +1,25 @@
+2003.8.17: version 1.0
+    - Major changes, new config options:
+      + scroll_step: how many traces to scroll when end of page
+        is reached.
+      + complete_pages: if ``yes'', wait until all channels have
+        reached the end of page. If ``no'', scroll as soon as the
+        first channel reaches the end of page.
+      + coloured_traces: if ``yes'', use different colors for
+        subsequent traces.
+      + desc1: station description at the top of the screen, line 1.
+      + desc2: station description at the top of the screen, line 2.
+
+2003.7.1:  version 0.2
+	- Update to libslink 0.8.3 and later interface.
+
+2003.6.11: version 0.1
+	- Change option -s to option -p and add options -s and -S.
+	- Convert main() to use libslink.
+	- Renamed nearly every occurance from qplot to slqplot, except
+	the configuration files.
+
+2003.6.10:
+	- Added some directives to qpgraph.c to include plotcompat.h so 
+	slqplot can compile against newer versions of libplot.
+	- Removed Mini-SEED and other qlib/comserv interface routines.

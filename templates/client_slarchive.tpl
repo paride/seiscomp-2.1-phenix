@@ -1,0 +1,1 @@
+slarchive   run_with_lock #home_sysop#/status/#statid#.slarchive.pid slarchive -x #home_sysop#/status/#statid#.slarchive.seq:100 -SDS #home_sysop#/archive -nt 900 -Fi:1 -Fc:900 -S #netid#_#station# #srcaddr#:#srcport#

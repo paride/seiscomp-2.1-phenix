@@ -1,0 +1,13 @@
+#!/bin/bash
+
+CFGDIR=/home/seiscomp/config
+TRACELEN=1800
+SELECTORS=BHZ.D
+
+STREAMS=$(for f in $CFGDIR/rc_*; do
+    source $f
+    echo -n "${NET}_${STATION}:${SELECTORS},"
+done | sed -e 's/,$//')
+
+/usr/java/j2re1.4.2_05/bin/java -cp /home/seiscomp/lib/SeisGram2K40.jar net.alomax.seisgram2k.SeisGram2K -seedlink "localhost:18000#$STREAMS#$TRACELEN" -seedlink.groupchannels YES
+

@@ -1,0 +1,37 @@
+Comserv connection semantics in SeedLink mode.
+
+Variables with _cnt suffix are incremented every second. There are no sleep()
+statements as given here, they are only for better readability. Real server
+code always checks for service requests.
+
+--- start pseudocode
+
+PARAMETERS: ifup, ifdown, standby, uptime, netto, netdly
+
+while (not stop)
+    run (ifup)
+    uptime_cnt := 0
+    while (uptime == 0 or uptime_cnt < uptime)
+        if (not connected)
+            connect
+            if (status == ERROR)
+                break
+            netto_cnt := 0
+        read data
+        if (status == DATA_AVAILABLE)
+            netto_cnt := 0
+        else if (uptime != 0 and status == END_OF_DATA)
+            close connection
+            break
+        else if (status == ERROR)
+            close connection
+            sleep (netdly)
+        else  /* data not available */
+            if (netto_cnt >= netto)
+                close connection
+                sleep (netdly)
+    run (ifdown)
+    sleep (standby)
+ 
+--- end pseudocode
+

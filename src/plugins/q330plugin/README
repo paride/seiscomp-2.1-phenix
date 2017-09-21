@@ -1,0 +1,27 @@
+
+q330_plugin is a SeedLink plugin that collects data from a 
+Quanterra Q330 digitizer.
+
+This software is based on the Mountainair (qmaserv) software release
+v1.1.12 by ISTI, Inc.  It is important to understand that this
+software cannot be used to configure a Q330, Quanterra's Windows-based
+Willard application can be used for that task.  This software expects
+to connect to a Q330 via a TCP/IP sockets.  In theory it should be
+possible to configure a given operating system to use the SLIP
+protocol on a local serial port connected to Q330 but that has not
+been tested.
+
+Compiling:
+
+A simple 'make' in the base directory will use GNU's g++ and gcc to
+build the entire package.  No other compilers have been tested.  For
+building on Solaris the Makefile will need to be edited.
+
+
+An example plugins.ini configuration section can be found in the 
+config directory.
+
+The plugin always gives the controlling SeedLink server 512 byte
+Mini-SEED data records in network byte order (big endian).
+
+
