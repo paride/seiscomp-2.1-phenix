@@ -9,7 +9,7 @@ Q4120 digitizers.
 This version has been modified to allow its compilation on modern
 GNU/Linux systems. For a list of the changes check the git log.
 
-The upstream source code is available publicly distributed GFZ
+The upstream source code is publicly distributed by GFZ
 and available at:
 
 [ftp://ftp.gfz-potsdam.de/home/st/GEOFON/software/SeisComP/2.5/](ftp://ftp.gfz-potsdam.de/home/st/GEOFON/software/SeisComP/)
