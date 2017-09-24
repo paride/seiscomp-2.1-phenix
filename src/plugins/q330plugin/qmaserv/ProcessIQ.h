@@ -34,5 +34,5 @@ void processInputQueue();
 bool walkBlockettes(dt_data& dt);
 void setDRSNForAllLCQ(const BTI& timeInfo);
 void sendAcksIfNeeded();
-void report_sequence_error(char* astring,qma_uint32 wasit, qma_uint32 notit);
+void report_sequence_error(const char* astring,qma_uint32 wasit, qma_uint32 notit);
 #endif

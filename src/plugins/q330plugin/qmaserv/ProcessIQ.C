@@ -590,7 +590,7 @@ void sendAcksIfNeeded()
   return;
 }
 
-void report_sequence_error(char* astring,qma_uint32 wasit, qma_uint32 oldit)
+void report_sequence_error(const char* astring,qma_uint32 wasit, qma_uint32 oldit)
 {
   std::cout << "xxx TimeStampError " << astring << " - Was: " << wasit 
     << " expected: " << oldit << std::endl;

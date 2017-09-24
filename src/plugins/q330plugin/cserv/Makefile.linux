@@ -4,7 +4,7 @@ SLPLUGINSDIR = $(BASEDIR)/libslplugin
 QDIR   = $(BASEDIR)/qlib2
 
 CXX = g++
-CXXFLAGS = -Wall -O2
+CXXFLAGS = -O2
 
 all: libcserv.a
 

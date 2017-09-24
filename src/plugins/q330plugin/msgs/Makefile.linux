@@ -22,7 +22,7 @@
 # linux 2 / gcc definitions
 #
 CXX	 = g++
-CXXFLAGS = -O2 -Wall $(INCL) -DLINUX -DQMA_LITTLE_ENDIAN
+CXXFLAGS = -O2 $(INCL) -DLINUX -DQMA_LITTLE_ENDIAN
 LD       = $(CXX)
 INCL	 = -I../include -I../utils -I../qmaserv
 LDLIBS	 = -lnsl -lsocket
