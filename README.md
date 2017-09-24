@@ -26,6 +26,7 @@ Beside the `build-essential` tools a few packages are needed:
 - `libxml2-dev`
 - `libplot-dev`
 - `libgd-dev`
+- `libf2c2-dev`
 - `flex`
 
 In order to build the pdf manual (disabled by default) `texlive` is also
@@ -48,6 +49,6 @@ available on request, but its redistribution is explicitly forbidden.
 
 SeisComP 2.1 is not licensed in a clear way, so it has
 to be considered **non-free**.
-A very ambiguous and clearly non-free
+An ambiguous and clearly non-free
 [SeisComP Public License](http://geofon.gfz-potsdam.de/software/seiscomp/license.pdf)
 does exist, but seems to apply only to the newer SeisComP3. 
