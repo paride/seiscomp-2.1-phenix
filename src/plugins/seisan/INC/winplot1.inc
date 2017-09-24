@@ -1,1 +1,0 @@
-c   dummy for sun

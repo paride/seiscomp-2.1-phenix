@@ -1,4 +1,0 @@
-#!/bin/sh
-kill -9 17876
-ipcrm shm 640 
-ipcrm sem 640 
