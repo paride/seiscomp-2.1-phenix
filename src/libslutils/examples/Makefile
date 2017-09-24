@@ -7,7 +7,7 @@ XML_LIBS := $(shell xml2-config --libs)
 OBJS = read_xml.o read_ini_multi.o read_ini_single.o
 
 CXX = g++
-CXXFLAGS = -Wall -O2
+CXXFLAGS = -O2
 LDFLAGS =
 LDLIBS =
 

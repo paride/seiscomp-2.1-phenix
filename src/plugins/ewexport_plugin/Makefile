@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS  = -D_REENTRANT -O2 -Wall
+CFLAGS  = -D_REENTRANT -O2
 
 # For using another compiler (e.g. the Sun compiler)
 #CC = cc

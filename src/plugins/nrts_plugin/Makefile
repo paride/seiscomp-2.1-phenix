@@ -9,7 +9,7 @@ OSNAME = LINUX
 OBJS = nrts_plugin.o plugin.o
 
 CC = gcc
-CFLAGS = -Wall -O2
+CFLAGS = -O2
 LDFLAGS =
 LDLIBS = -lpthread -lrt -lm
 DEFS = -D$(OSNAME) -DSYSLOG_FACILITY=LOG_LOCAL0

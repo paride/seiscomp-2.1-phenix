@@ -14,7 +14,7 @@ OBJS = serial_plugin.o proto_edata.o proto_edata2.o \
     proto_dr24.o proto_prema.o proto_hrd24.o proto_hrd24alt.o
 
 CXX = g++
-CXXFLAGS = -Wall -O2
+CXXFLAGS = -O2
 LDFLAGS =
 LDLIBS =
 OPTIONS = -DSYSLOG_FACILITY=LOG_LOCAL0 -DCONFIG_FILE=\"$(CONFIG_FILE)\"

@@ -6,9 +6,9 @@ CXX_OBJ = plugin_channel.o
 CC_OBJ = plugin.o
 
 CXX = g++
-CXXFLAGS = -Wall -O2
+CXXFLAGS = -O2
 CC = gcc
-CFLAGS = -Wall -Wstrict-prototypes -O2
+CFLAGS = -Wstrict-prototypes -O2
 
 all: libslplugin.a
 

@@ -9,9 +9,9 @@ XML_INCL := $(shell xml2-config --cflags)
 XML_LIBS := $(shell xml2-config --libs)
 
 CXX = g++
-CXXFLAGS = -Wall -O2
+CXXFLAGS = -O2
 CC = gcc
-CFLAGS = -Wall -O2
+CFLAGS = -O2
 LDFLAGS =
 LDLIBS =
 

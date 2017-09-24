@@ -6,13 +6,13 @@ QDIR   = $(BASEDIR)/qlib2
 QLIB   = $(QDIR)/libqlib2.a
 
 CC = gcc
-CFLAGS = -Wall -O2
+CFLAGS = -O2
 
 CXX = g++
-CXXFLAGS = -Wall -O2
+CXXFLAGS = -O2
 
 JXX = gcj
-JXXFLAGS = -Wall -O2
+JXXFLAGS = -O2
 
 LDFLAGS =
 LDLIBS  =

@@ -3,7 +3,7 @@ CFLAGS = -O -I..
 
 # GCC specific parameters
 GCC = gcc
-GCCFLAGS = -O2 -Wall -I..
+GCCFLAGS = -O2 -I..
  
 LDFLAGS = -L..
 LDLIBS = -lslink

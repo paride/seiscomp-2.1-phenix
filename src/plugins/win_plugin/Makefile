@@ -3,7 +3,7 @@ BINDIR = ../../bin
 OBJS = win_plugin.o plugin.o
 
 CC = gcc
-CFLAGS = -Wall -O2
+CFLAGS = -O2
 LDFLAGS =
 LDLIBS =
 DEFS = -DSYSLOG_FACILITY=LOG_LOCAL0

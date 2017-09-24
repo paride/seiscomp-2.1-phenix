@@ -10,9 +10,9 @@ TOOLSDIR = $(CSDIR)/file
 TOOLSLIB = $(TOOLSDIR)/ToolsLib.a
 
 CXX = g++
-CXXFLAGS = -Wall -O2 -fno-operator-names
+CXXFLAGS = -O2 -fno-operator-names
 CC = gcc
-CFLAGS = -Wall -O2
+CFLAGS = -O2
 LDFLAGS =
 LDLIBS =
 

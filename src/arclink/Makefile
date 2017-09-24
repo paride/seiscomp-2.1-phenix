@@ -9,7 +9,7 @@ XML_LIBS := $(shell xml2-config --libs)
 OBJS = arclink.o
 
 CXX = g++
-CXXFLAGS = -Wall -g2
+CXXFLAGS = -g2
 LDFLAGS =
 LDLIBS =
 OPTIONS = -DSYSLOG_FACILITY=LOG_LOCAL0

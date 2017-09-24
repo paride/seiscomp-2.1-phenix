@@ -4,7 +4,7 @@ SLINKDIR = $(BASEDIR)/libslink
 SLINKLIB = $(SLINKDIR)/libslink.a
 
 CC = gcc
-CFLAGS  = -O2 -Wall
+CFLAGS  = -O2
 
 # For using another compiler (e.g. the Sun compiler)
 #CC = cc

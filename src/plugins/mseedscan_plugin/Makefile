@@ -6,7 +6,7 @@ SLPLUGINSLIB = $(SLPLUGINSDIR)/libslplugin.a
 OBJS = mseedscan.o seedutil.o rbtree.o stack.o
 
 CC = gcc
-CFLAGS = -Wall -O2
+CFLAGS = -O2
 INC = -I$(SLPLUGINSDIR)
 LDFLAGS = 
 LDLIBS = 

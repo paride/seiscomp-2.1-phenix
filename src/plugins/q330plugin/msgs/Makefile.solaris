@@ -22,7 +22,7 @@
 # Solaris 2 / gcc definitions
 #
 CXX	 = g++
-CXXFLAGS = -O2 -Wall $(INCL)
+CXXFLAGS = -O2 $(INCL)
 LD       = $(CXX)
 INCL	 = -I../include -I../utils -I../qmaserv
 LDLIBS	 = -lnsl -lsocket

@@ -16,7 +16,7 @@ CONFIG_FILE = $(CONFIG_DIR)/plugins.ini
 OBJS = comserv_plugin.o
 
 CXX = g++
-CXXFLAGS = -Wall -O2 -fno-operator-names
+CXXFLAGS = -O2 -fno-operator-names
 LDFLAGS =
 LDLIBS =
 OPTIONS = -DSYSLOG_FACILITY=LOG_LOCAL0 -DCONFIG_FILE=\"$(CONFIG_FILE)\"

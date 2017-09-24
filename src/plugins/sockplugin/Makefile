@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS = -Wall -O2
+CFLAGS = -O2
 LDFLAGS =
 
 # For Solaris uncomment the following line

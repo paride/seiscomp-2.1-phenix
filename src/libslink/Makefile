@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -O2 -Wall
+CFLAGS = -O2
 
 LIB_OBJS = gswap.o unpack.o msrecord.o genutils.o strutils.o \
            logging.o network.o statefile.o config.o \

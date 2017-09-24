@@ -2,7 +2,7 @@
 BASEDIR = ../..
 
 CC=gcc
-CFLAGS = -Wall
+CFLAGS =
 LDFLAGS =
 # For Solaris uncomment the following line
 #LDLIBS = -lsocket -lnsl

@@ -7,7 +7,7 @@ XML_INCL := $(shell xml2-config --cflags)
 XML_LIBS := $(shell xml2-config --libs)
 
 CC = gcc
-CFLAGS = -Wall -O2
+CFLAGS = -O2
 
 # For using another compiler (e.g. the Sun compiler)
 #CC = cc

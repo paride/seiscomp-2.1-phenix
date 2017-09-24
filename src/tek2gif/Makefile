@@ -1,5 +1,5 @@
 CC      = gcc
-CFLAGS  = -Wall -O2
+CFLAGS  = -O2
 LDFLAGS = -L/opt/gd/lib
 LDLIBS  = -lgd
 INC     = -I/opt/gd/include

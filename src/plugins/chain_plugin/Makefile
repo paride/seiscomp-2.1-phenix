@@ -15,9 +15,9 @@ XML_LIBS := $(shell xml2-config --libs)
 OBJS = chain_plugin.o schedule.o
 
 CXX = g++
-CXXFLAGS = -Wall -O2
+CXXFLAGS = -O2
 CC = gcc
-CFLAGS = -Wall -Wstrict-prototypes -O2
+CFLAGS = -Wstrict-prototypes -O2
 LDFLAGS =
 LDLIBS =
 OPTIONS = -DSYSLOG_FACILITY=LOG_LOCAL0
