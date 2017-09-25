@@ -100,7 +100,7 @@ static int verbosity ; /* defaults to zero? */
 
 /* Get startup options */
       printf ("Startup option (0 = First, 1 = Last, 2 = At Time) : ") ;
-      gets (s1) ;
+      fgets (s1, sizeof(s1), stdin) ;
       sscanf (s1, "%i", &sel) ;
       switch (sel)
         begin
@@ -118,7 +118,7 @@ static int verbosity ; /* defaults to zero? */
             begin
               ctime = dtime () ;
               printf ("Number of seconds previous to current time to start : ") ;
-              gets(s1) ;
+              fgets(s1, sizeof(s1), stdin) ;
               sscanf (s1, "%i", &sel) ;
               if (sel < 0)
                 then

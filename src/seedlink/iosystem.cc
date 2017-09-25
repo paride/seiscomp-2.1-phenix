@@ -189,24 +189,24 @@ class Sequence
     
     Sequence(): value(uninitialized) {}
     
-    Sequence::Sequence(int value_init): value(value_init)
+    Sequence(int value_init): value(value_init)
       {
         internal_check(value == uninitialized || !(value & ~mask));
       }
 
-    void Sequence::increment()
+    void increment()
       {
         internal_check(value != uninitialized);
         value = (value + 1) & mask;
       }
 
-    Sequence Sequence::operator+(int n) const
+    Sequence operator+(int n) const
       {
         internal_check(value != uninitialized && !(n & ~mask));
         return ((value + n) & mask);
       }
 
-    Sequence Sequence::operator-(int n) const
+    Sequence operator-(int n) const
       {
         internal_check(value != uninitialized && !(n & ~mask));
         return ((value - n) & mask);

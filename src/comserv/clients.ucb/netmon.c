@@ -34,7 +34,7 @@ static char sccsid[] = "%W% %G% %U%";
 #define NULL (__null)
 #endif
 
-char *syntax[] = {
+const char *syntax[] = {
 "%s version " VERSION,
 "%s [-B] [-D] [-b] [-l] [-V] [-r] [-v] [-h] [-d n] [-s | -t] [station_list]",
 "    where:",
@@ -248,8 +248,8 @@ void dump_client (STATION_INFO *s, CLIENT_INFO *c);
 int server_status (STATION_INFO *s);
 int client_status (STATION_INFO *s, CLIENT_INFO *c);
 int spawn_process (char *prog, char *station);
-int write_request(char *station, char *op);
-int print_syntax(char *cmd, char *syntax[], FILE *fp);
+int write_request(char *station, const char *op);
+int print_syntax(char *cmd, const char *syntax[], FILE *fp);
 int shutdown_station (STATION_INFO *s);
 int startup_station (STATION_INFO *s);
 int station_index (char *s);
@@ -295,7 +295,8 @@ int main(int argc, char **argv)
     char str1[SECWIDTH], str2[SECWIDTH];
     int ntokens, pid, status, ok;
     int display_status;
-    char *station_list, *station, *operation;
+    char *station_list, *station;
+    const char *operation;
     double now;
     STATION_INFO *s;
     CLIENT_INFO *c;
@@ -1414,7 +1415,7 @@ int spawn_process (char *prog, char *station)
 /*  write_request:							*/
 /*	Write request file for monitor daemon.				*/
 /************************************************************************/
-int write_request(char *station, char *op)
+int write_request(char *station, const char *op)
 {
     FILE *fp;
     char file[2048];
@@ -1435,7 +1436,7 @@ int write_request(char *station, char *op)
 /************************************************************************/
 int print_syntax
    (char	*cmd,		/* program name.			*/
-    char	*syntax[],	/* syntax array.			*/
+    const char	*syntax[],	/* syntax array.			*/
     FILE	*fp)		/* FILE ptr for output.			*/
 {
     int i;

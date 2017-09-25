@@ -88,7 +88,7 @@ class CfgParserINI: public INIFlexLexer, public StreambufBasePartner
     void set(const string &parmname, const char *value);
 
   public:
-    CfgParserINI::CfgParserINI(const string &file, rc_ptr<CfgElementMap> root,
+    CfgParserINI(const string &file, rc_ptr<CfgElementMap> root,
       istream &yyin);
 
     ~CfgParserINI();

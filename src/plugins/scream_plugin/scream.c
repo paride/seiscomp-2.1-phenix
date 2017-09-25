@@ -172,7 +172,7 @@ scm_dispatch ()
   char server[40];
   int port, len;
 
-static blocknr_prev;
+  static int blocknr_prev;
 
   switch (protocol)
   {

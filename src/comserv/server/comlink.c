@@ -52,6 +52,7 @@ Edit History:
 #include <string.h>
 #include <signal.h>
 #include <ctype.h>
+#include <stdint.h>
 #ifndef _OSK
 #include <unistd.h>
 #include <termio.h>
@@ -1504,7 +1505,7 @@ ssize_t writen(int fd, const void *vptr, size_t n)
                                       break ;
                                     end
                                 pdownload = (download_struc *) shmat (pdr->dpshmid, NULL, 0) ;
-                                if ((int) pdownload == ERROR)
+                                if ((intptr_t) pdownload == ERROR)
                                   then
                                     begin
                                       pcom->completion_status = CSCR_PRIVATE ;
@@ -1816,7 +1817,7 @@ ssize_t writen(int fd, const void *vptr, size_t n)
       if (udplink)
         then
           begin
-            numread = recv(path, dest, (int) destend - (int) dest, 0) ;
+            numread = recv(path, dest, (intptr_t) destend - (intptr_t) dest, 0) ;
             if (numread > 0)
               then
                 begin

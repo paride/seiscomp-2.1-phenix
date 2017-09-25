@@ -91,7 +91,7 @@ extern int date_fmt_num
 
 extern int print_syntax
    (char	*cmd,		/* program name.			*/
-    char	*syntax[],	/* syntax array.			*/
+    const char	*syntax[],	/* syntax array.			*/
     FILE	*fp);		/* FILE ptr for output.			*/
 
 extern char *uppercase

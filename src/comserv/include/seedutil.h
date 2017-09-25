@@ -9,7 +9,7 @@ extern "C" {
 
 /* Take a C string, move it into a fixed length array, and pad
    on the right with spaces to fill the array */
-  void cpadright (pchar s, pchar b, short fld);
+  void cpadright (const pchar s, pchar b, short fld);
 
 /* Take a Pascal string, move it into a fixed length array, and pad
    on the right with spaces to fill the array */

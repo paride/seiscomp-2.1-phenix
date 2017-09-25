@@ -1,7 +1,7 @@
 CC = g++
 BINDIR	= ../../bin
 INCL	= ../include
-CFLAGS	= -O2 -fpack-struct -I$(INCL)
+CFLAGS	= -O2 -Wno-write-strings -fpack-struct -I$(INCL)
 LDFLAGS	= 
 CSUDIR	= ../util
 CSULIB	= $(CSUDIR)/libutil.a

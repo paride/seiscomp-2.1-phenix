@@ -15,7 +15,7 @@ CONFIG_FILE  = /home/sysop/config/seedlink.ini
 OBJS = seedlink.o iosystem.o monitor.o sproc.o mseed.o steim1.o steim2.o
 
 CXX = g++
-CXXFLAGS = -O2 -fpermissive
+CXXFLAGS = -O2
 LDFLAGS =
 LDLIBS =
 OPTIONS = -DSYSLOG_FACILITY=LOG_LOCAL0 -DCONFIG_FILE=\"$(CONFIG_FILE)\"

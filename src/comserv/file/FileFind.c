@@ -24,6 +24,7 @@ EM
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <string.h>
+#include <stdlib.h>
 
 /* ======================================================================== */
 /*                               Prototypes                                 */
@@ -59,7 +60,7 @@ static TREE *root     = NULL,
 LEAF        *LLeaf1   = NULL,
             *LLeaf2   = NULL;
 static long lKeyPos   = 0L;
-static iCount         = 0;
+static int  iCount    = 0;
 	 
 	 
 /* ======================================================================== */

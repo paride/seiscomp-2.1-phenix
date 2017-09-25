@@ -379,7 +379,7 @@ short channel_count ;
       char s2[200] ;
       
       printf ("%s (CR = %d) : ", s, v) ;
-      gets (s2) ;
+      fgets (s2, sizeof(s2), stdin) ;
       if (s2[0] != '\0')
         then
           sscanf (s2, "%d", &l) ;
@@ -395,7 +395,7 @@ short channel_count ;
       char s2[200] ;
       
       printf ("%s, (CR = No Change) : ", s) ;
-      gets (s2) ;
+      fgets (s2, sizeof(s2), stdin) ;
       if (s2[0] != '\0')
         then
           sscanf (s2, "%d", &l) ;
@@ -490,7 +490,7 @@ short channel_count ;
                     end
                   pcomm->completion_status = CSCS_IDLE ;
                   printf ("Calibrator number [0 to exit] : ") ;
-                  gets(s1) ;
+                  fgets(s1, sizeof(s1), stdin) ;
                   if (s1[0] == '\0')
                     then
                       return 0 ;
@@ -622,7 +622,7 @@ short channel_count ;
               begin
                 pcomm->completion_status = CSCS_IDLE ;
                 printf ("Seed Specification [LL-]SSS (CR to abort) : ") ;
-                gets (s1) ;
+                fgets (s1, sizeof(s1), stdin) ;
                 if (s1[0] == '\0')
                   then
                     return CSDP_ABT ;
@@ -772,7 +772,7 @@ short channel_count ;
           printf ("24=Comm Event            25=Xfer File to Host     26=Xfer File to DA\n") ;
           printf ("27=Server Link Settings  28=Flooding Control\n") ;
           printf ("Command : ") ;
-          if (gets (s1) == NULL)
+          if (fgets (s1, sizeof(s1), stdin) == NULL)
             then
               break ;
           sscanf (s1, "%i", &sel) ;
@@ -1087,7 +1087,7 @@ short channel_count ;
               case 9 :
                 begin
                   printf ("Unblock packets from Client Number : ") ;
-                  gets (s1) ;
+                  fgets (s1, sizeof(s1), stdin) ;
                   if (s1[0] == '\0')
                     then
                       break ;
@@ -1188,7 +1188,7 @@ short channel_count ;
                   pshell->log_local = FALSE ;
                   pshell->log_host = FALSE ;
                   printf ("Shell: ") ;
-                  gets (s1) ;
+                  fgets (s1, sizeof(s1), stdin) ;
                   if (s1[0] == '\0')
                     then
                       break ;
@@ -1216,7 +1216,7 @@ short channel_count ;
                   this->command = CSCM_VCO ;
                   pshort = (short *) ((long) me + this->cominoffset) ;
                   printf ("VCO Value (0-4095, -1=PLL) : ") ;
-                  gets (s1) ;
+                  fgets (s1, sizeof(s1), stdin) ;
                   if (s1[0] == '\0')
                     then
                       break ;
@@ -1305,7 +1305,7 @@ short channel_count ;
                     then
                       begin
                         printf ("Duration in ms [%d-%d CR=%d] : ", pe->min_mass_dur, pe->max_mass_dur, pe->def_mass_dur) ;
-                        gets(s1) ;
+                        fgets(s1, sizeof(s1), stdin) ;
                         if (s1[0] == '\0')
                           then
                             k = pe->def_mass_dur ;
@@ -1362,7 +1362,7 @@ short channel_count ;
                     begin
                       pcsc->map = 0 ;
                       printf ("Channels to Calibrate [i.e. %s, CR=Stop Cal] : ", chanstring) ;
-                      gets (s1) ;
+                      fgets (s1, sizeof(s1), stdin) ;
                       if (s1[0] == '\0')
                         then
                           begin
@@ -1438,7 +1438,7 @@ short channel_count ;
                     then
                       begin
                         printf ("Capacitive or Resistive Coupling (C/*R) : ") ;
-                        gets(s1) ;
+                        fgets(s1, sizeof(s1), stdin) ;
                         pcsc->capacitor = ((s1[0] == 'C') lor (s1[0] == 'c')) ;
                       end
                   if (pe->min_amp == pe->max_amp)
@@ -1452,7 +1452,7 @@ short channel_count ;
                         begin
                           printf ("Amplitude [%d to %d dB in %d dB steps] : ",
                             pe->min_amp, pe->max_amp, pe->amp_step) ;
-                          gets(s1) ;
+                          fgets(s1, sizeof(s1), stdin) ;
                           sscanf (s1, "%i", &sel2) ;
                           pcsc->amp = sel2 ;
                         end
@@ -1486,7 +1486,7 @@ short channel_count ;
                         else
                           begin
                             printf (": ") ;
-                            gets(s1) ;
+                            fgets(s1, sizeof(s1), stdin) ;
                             sscanf (s1, "%i", &sel2) ;
                             j = sel2 ;
                             if ((j > 0) and (j <= i))
@@ -1507,7 +1507,7 @@ short channel_count ;
                             then
                               begin
                                 printf ("Polarity of step [*P/N] : ") ;
-                                gets(s1) ;
+                                fgets(s1, sizeof(s1), stdin) ;
                                 pcsc->plus = lnot ((s1[0] == 'N') lor (s1[0] == 'n')) ;
                               end
                             else
@@ -1538,7 +1538,7 @@ short channel_count ;
                           do
                             begin
                               printf ("Sine frequency number [1-%d] : ", i) ;
-                              gets(s1) ;
+                              fgets(s1, sizeof(s1), stdin) ;
                               sscanf (s1, "%i", &sel2) ;
                             end
                           while ((sel2 < 1) lor (sel2 > i)) ;
@@ -1562,7 +1562,7 @@ short channel_count ;
                                   begin
                                     printf ("Period multiplier [%d-%d] : ",
                                         pe->rand_min_period, pe->rand_max_period) ;
-                                    gets(s1) ;
+                                    fgets(s1, sizeof(s1), stdin) ;
                                     sscanf (s1, "%i", &sel2) ;
                                     pcsc->rmult = sel2 ;
                                   end
@@ -1582,7 +1582,7 @@ short channel_count ;
                           begin
                             strpcopy (s2, pe->filtf) ;
                             printf ("3dB Filter cutoff %s [*%d] : ", &s2, j) ;
-                            gets(s1) ;
+                            fgets(s1, sizeof(s1), stdin) ;
                             if (s1[0] != '\0')
                               then
                                 begin
@@ -1600,7 +1600,7 @@ short channel_count ;
                           begin
                             printf ("Duration in minutes [%d-%d] : ", pd->min_dur div 60, 
                                     pd->max_dur div 60) ;
-                            gets(s1) ;
+                            fgets(s1, sizeof(s1), stdin) ;
                             if (strcasecmp((pchar)&s1, "MAX") == 0)
                               then
                                 begin
@@ -1613,7 +1613,7 @@ short channel_count ;
                         else
                           begin
                             printf ("Duration in seconds [%d-%d] : ", pd->min_dur, pd->max_dur) ;
-                            gets(s1) ;
+                            fgets(s1, sizeof(s1), stdin) ;
                             if (strcasecmp((pchar)&s1, "MAX") == 0)
                               then
                                 begin
@@ -1631,7 +1631,7 @@ short channel_count ;
                         begin
                           printf ("Relay settling delay in seconds [%d-%d] : ",
                             pe->min_settle, pe->max_settle) ;
-                          gets(s1) ;
+                          fgets(s1, sizeof(s1), stdin) ;
                           sscanf (s1, "%d", &sel2) ;
                           pcsc->settle = sel2 ;
                         end
@@ -1642,7 +1642,7 @@ short channel_count ;
                         begin            
                           printf ("Relay settling delay in minutes [%d-%d] : ",
                             pe->min_settle div 60, pe->max_settle div 60) ;
-                          gets(s1) ;
+                          fgets(s1, sizeof(s1), stdin) ;
                           sscanf (s1, "%d", &sel2) ;
                           pcsc->settle = sel2 * 60 ;
                         end
@@ -1674,7 +1674,7 @@ short channel_count ;
                   while (pdec->count < 20)
                     begin
                       printf ("ID of detector [CR when done] : ") ;
-                      gets (s1) ;
+                      fgets (s1, sizeof(s1), stdin) ;
                       if (s1[0] == '\0')
                         then
                           break ;
@@ -1682,7 +1682,7 @@ short channel_count ;
                       pdec->detectors[pdec->count].detector_id = sel2 ;
                       pdec->detectors[pdec->count].de_sp1 = 0 ;
                       printf ("Enable Detector [Y/N] : ") ;
-                      gets (s1) ;
+                      fgets (s1, sizeof(s1), stdin) ;
                       pdec->detectors[pdec->count++].enable = ((s1[0] == 'Y') lor (s1[0] == 'y')) ;
                     end
                   if (pdec->count)
@@ -1735,7 +1735,7 @@ short channel_count ;
                       s1[0] = '\0' ;
                     end
                   printf ("Detector ID to Change : ") ;
-                  gets (s1) ;
+                  fgets (s1, sizeof(s1), stdin) ;
                   if (s1[0] == '\0')
                     then
                       break ;
@@ -1761,7 +1761,7 @@ short channel_count ;
                   pdcc->id = sel2 ;
                   pdcc->dct_sp = 0 ;
                   printf ("Enable Detector [Y/N] : ") ;
-                  gets (s1) ;
+                  fgets (s1, sizeof(s1), stdin) ;
                   pdcc->enab = ((s1[0] == 'Y') lor (s1[0] == 'y')) ;
                   plong = (long *) &pdd->cons ;
                   plong2 = (long *) &pdcc->ucon ;
@@ -1834,7 +1834,7 @@ short channel_count ;
                         then
                           break ;
                       printf ("Channel specification to change ([LL-]SSS or CR if done) : ") ;
-                      gets(s1) ;
+                      fgets(s1, sizeof(s1), stdin) ;
                       upshift(s1) ;
                       if (s1[0] == '\0')
                         then
@@ -1872,7 +1872,7 @@ short channel_count ;
 #else
                                     printf ("Enable %s (Y/N, CR=%s) : ", &(outpath[k]), s2) ;
 #endif
-                                    gets(s1) ;
+                                    fgets(s1, sizeof(s1), stdin) ;
                                     if (s1[0] == '\0')
                                       then
                                         strcpy(s1, s2) ;
@@ -1891,7 +1891,7 @@ short channel_count ;
                                   while (1)
                                     begin
                                       printf ("Continuous priority (CR = %s) : ", cl_prio(pcr->c_prio)) ;
-                                      gets (s2) ;
+                                      fgets (s2, sizeof(s2), stdin) ;
                                       if (s2[0] != '\0')
                                         then
                                           if (strcasecmp((pchar) s2, "DEF") == 0)
@@ -1932,7 +1932,7 @@ short channel_count ;
                                   while (1)
                                     begin
                                       printf ("Event priority (CR = %s) : ", cl_prio(pcr->e_prio)) ;
-                                      gets (s2) ;
+                                      fgets (s2, sizeof(s2), stdin) ;
                                       if (s2[0] != '\0')
                                         then
                                           if (strcasecmp((pchar) s2, "DEF") == 0)
@@ -2010,7 +2010,7 @@ short channel_count ;
                   while (1)
                     begin
                       printf ("Comm Event name to Change (CR to stop) : ") ;
-                      gets (s1) ;
+                      fgets (s1, sizeof(s1), stdin) ;
                       untrail(s1) ;
                       if (s1[0] == '\0')
                         then
@@ -2069,7 +2069,7 @@ short channel_count ;
                 begin
                   pdc = (download_com *) ((long) me + this->cominoffset) ;
                   printf ("File name on DA : ") ;
-                  gets (s1) ;
+                  fgets (s1, sizeof(s1), stdin) ;
                   if (s1[0] == '\0')
                     then
                       break ;
@@ -2095,7 +2095,7 @@ short channel_count ;
                               else
                                 printf ("%d%% percent transferred, continue to wait (Y/N) : ",
                                   (long) ((pdr->byte_count * 100.0) / (unsigned int) pdr->fsize)) ;
-                            gets(s1) ;
+                            fgets(s1, sizeof(s1), stdin) ;
                             if ((s1[0] != 'Y') land (s1[0] != 'y'))
                               then
                                 begin
@@ -2108,7 +2108,7 @@ short channel_count ;
                             begin
 #ifndef _OSK
                               printf ("Is this a text file (Y/N) : ") ;
-                              gets (s1) ;
+                              fgets (s1, sizeof(s1), stdin) ;
 #endif
                               pcomm->completion_status = CSCS_IDLE ;
                               pc1 = (pchar) shmat(pdr->dpshmid, NULL, 0) ; /* attach to data module */
@@ -2135,7 +2135,7 @@ short channel_count ;
                               while (1)
                                 begin
                                   printf ("File name on host (CR to abort) : ") ;
-                                  gets(s1) ;
+                                  fgets(s1, sizeof(s1), stdin) ;
                                   if (s1[0] == '\0')
                                     then
                                       break ;
@@ -2170,7 +2170,7 @@ short channel_count ;
                 begin
                   puc = (upload_com *) ((long) me + this->cominoffset) ;
                   printf ("File name on DA : ") ;
-                  gets (s1) ;
+                  fgets (s1, sizeof(s1), stdin) ;
                   if (s1[0] == '\0')
                     then
                       break ;
@@ -2181,7 +2181,7 @@ short channel_count ;
                   while (1)
                     begin
                       printf ("File name on host (CR to abort) : ") ;
-                      gets(s1) ;
+                      fgets(s1, sizeof(s1), stdin) ;
                       if (s1[0] == '\0')
                         then
                           break ;
@@ -2233,7 +2233,7 @@ short channel_count ;
                       break ;
 #ifndef _OSK
                   printf ("Is this a text file (Y/N) : ") ;
-                  gets (s1) ;
+                  fgets (s1, sizeof(s1), stdin) ;
                   if ((s1[0] == 'Y') lor (s1[0] == 'y'))
                     then
                       begin /* On Unix convert LF to CR */
@@ -2271,7 +2271,7 @@ short channel_count ;
                               else
                                 printf ("%d%% percent transferred, continue to wait (Y/N) : ",
                                   (long) ((pupres->bytecount * 100.0) / (unsigned int) puc->fsize)) ;
-                            gets(s1) ;
+                            fgets(s1, sizeof(s1), stdin) ;
                             if ((s1[0] != 'Y') land (s1[0] != 'y'))
                               then
                                 begin
@@ -2329,7 +2329,7 @@ short channel_count ;
                   this->command = CSCM_FLOOD_CTRL ;
                   pflood = (boolean *) ((long) me + this->cominoffset) ;
                   printf ("Enable Flooding (Y/N) : ") ;
-                  gets(s1) ;
+                  fgets(s1, sizeof(s1), stdin) ;
                   *pflood = ((s1[0] == 'Y') lor (s1[0] == 'y')) ;
                   err = cs_svc(me, 0) ;
                   if (err == CSCR_GOOD)

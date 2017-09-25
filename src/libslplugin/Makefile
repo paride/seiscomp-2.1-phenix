@@ -8,7 +8,7 @@ CC_OBJ = plugin.o
 CXX = g++
 CXXFLAGS = -O2
 CC = gcc
-CFLAGS = -Wstrict-prototypes -O2
+CFLAGS = -O2
 
 all: libslplugin.a
 

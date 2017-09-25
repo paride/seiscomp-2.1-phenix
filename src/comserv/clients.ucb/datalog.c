@@ -21,7 +21,7 @@ static char sccsid[] = "%W% %G% %U%";
 #define NULL (__null)
 #endif
 
-char *syntax[] = {
+const char *syntax[] = {
 "%s version " VERSION,
 "%s    [-v n] [-h]",
 "    where:",

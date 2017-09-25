@@ -147,7 +147,7 @@ class InfoGenerator
       }
 
   public:
-    InfoGenerator::InfoGenerator(int reclen, const string &streamname,
+    InfoGenerator(int reclen, const string &streamname,
       list<rc_ptr<InfoBuffer> > &buffer_list);
     ~InfoGenerator();
      void write_doc(xmlDocPtr doc);

@@ -1018,7 +1018,7 @@ void boolean_mask (short *ps, short bit_mask, char *str)
     }
 }
    
-char *selector_type_str[] = {"DAT", "DET", "CAL", "TIM", "MSG", "BLK"};
+const char *selector_type_str[] = {"DAT", "DET", "CAL", "TIM", "MSG", "BLK"};
 /************************************************************************/
 /*  store_selectors:							*/
 /*	Parse and store selectors for specific types of info.		*/

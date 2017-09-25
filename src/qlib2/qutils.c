@@ -46,6 +46,7 @@ static char sccsid[] = "$Id: qutils.c,v 1.1.1.1 2005/07/26 19:28:47 andres Exp $
 #include <string.h>
 #include <math.h>
 #include <errno.h>
+#include <ctype.h>
 #ifdef	SUNOS4
 #include <malloc.h>
 #endif
@@ -328,7 +329,7 @@ int date_fmt_num
 /************************************************************************/
 int print_syntax
    (char	*cmd,		/* program name.			*/
-    char	*syntax[],	/* syntax array.			*/
+    const char	*syntax[],	/* syntax array.			*/
     FILE	*fp)		/* FILE ptr for output.			*/
 {
     int i;

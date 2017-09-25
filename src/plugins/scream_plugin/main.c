@@ -18,7 +18,7 @@ struct config_struct config;
 char                 *mapfile;
 Map                  *rootmap;
 
-get_line (FILE *fd, char *line)
+int get_line (FILE *fd, char *line)
 {
         char c;
         int i=0, n;
@@ -48,7 +48,7 @@ Map *init_map ()
         return(map);
 }
 
-add_map (Map *inmap)
+int add_map (Map *inmap)
 {
    Map *newmap, *mp;
 
@@ -88,7 +88,7 @@ add_map (Map *inmap)
    }
 }
 
-parse_mapfile (char *mapfile)
+int parse_mapfile (char *mapfile)
 {
    FILE *fd;
    Map *newmap;

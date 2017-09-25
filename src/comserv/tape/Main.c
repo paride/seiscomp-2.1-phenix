@@ -11,6 +11,7 @@ Edit History:
 #include <termio.h>
 #include <fcntl.h>
 #include <string.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #if 0
 #include <sys/ipc.h>

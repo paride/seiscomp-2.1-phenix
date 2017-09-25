@@ -17,7 +17,7 @@ OBJS = chain_plugin.o schedule.o
 CXX = g++
 CXXFLAGS = -O2
 CC = gcc
-CFLAGS = -Wstrict-prototypes -O2
+CFLAGS = -O2
 LDFLAGS =
 LDLIBS =
 OPTIONS = -DSYSLOG_FACILITY=LOG_LOCAL0
