@@ -24,6 +24,7 @@
  *
  */
 #include <iostream>
+#include <cstdlib>
 #include <string.h>
 #include <stdlib.h>
 #include "QmaTypes.h"

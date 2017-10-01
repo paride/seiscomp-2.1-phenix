@@ -67,7 +67,7 @@ typedef struct _TIMER48 {
 /* Prototypes ------------------------------------------------------ */
 
 #ifdef ANSI_C
-VOID Timer48Init( VOID );
+VOID Timer48Init( void );
 VOID Timer48Start( TIMER48 * timer, UINT32 interval );
 VOID Timer48Restart( TIMER48 * timer );
 BOOL Timer48Expired( TIMER48 * timer );
@@ -76,7 +76,7 @@ UINT32 Timer48Elapsed( TIMER48 * timer );
 VOID MSPause( UINT32 interval );
 CHAR *MSIntervalToString( CHAR * string, UINT32 interval, UINT16 format );
 CHAR *IntervalToString( CHAR * string, UINT32 interval, UINT16 format );
-VOID Timer48Init( VOID );
+VOID Timer48Init( void );
 
 #else
 VOID Timer48Init( );

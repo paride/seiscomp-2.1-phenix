@@ -11,6 +11,8 @@
  * version. For more information, see http://www.gnu.org/
  *****************************************************************************/
 
+#include <cstdlib>
+
 #include <unistd.h>
 #include <sys/types.h>
 

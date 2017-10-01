@@ -94,7 +94,7 @@ typedef unsigned int uint32_t;
 #ifndef __BIG_ENDIAN
 #define __BIG_ENDIAN 1
 #endif
-#elif define (__i386)
+#elif defined (__i386)
 #ifndef __LITTLE_ENDIAN
 #define __LITTLE_ENDIAN 1
 #endif

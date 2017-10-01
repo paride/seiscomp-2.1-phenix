@@ -17,6 +17,7 @@
 #include <cstdlib>
 #include <cstddef>
 
+#include <stdio.h>
 #include <unistd.h>
 #include <time.h>
 #include <fcntl.h>

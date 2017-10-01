@@ -26,6 +26,7 @@
  *
  *
  */
+#include <cstdlib>
 #include <iostream>
 #include <errno.h>
 #include <unistd.h>

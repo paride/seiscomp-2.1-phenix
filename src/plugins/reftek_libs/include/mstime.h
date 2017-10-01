@@ -75,7 +75,7 @@ typedef struct _MSTIME_COMP {
 /* Prototypes --------------------------------------------------------- */
 
 #ifdef ANSI_C
-_MSTIME_C REAL64 SystemMSTime( VOID );
+_MSTIME_C REAL64 SystemMSTime( void );
 _MSTIME_C REAL64 EncodeMSTimeMD( INT32 year, INT32 month, INT32 day, INT32 hour, INT32 minute, REAL64 second );
 _MSTIME_C VOID   DecodeMSTimeMD( REAL64 mstime, INT32 * year, INT32 * month, INT32 * day, INT32 * hour, INT32 * minute, REAL64 * second );
 _MSTIME_C REAL64 EncodeMSTimeDOY( INT32 year, INT32 doy, INT32 hour, INT32 minute, REAL64 second );

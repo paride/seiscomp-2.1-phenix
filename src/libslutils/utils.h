@@ -23,6 +23,7 @@
 #include <cstring>
 #include <cerrno>
 
+#include <unistd.h>
 #include <sys/time.h>
 
 namespace Utilities_private {

@@ -63,7 +63,7 @@ VOID util_tsplit(REAL64 dtime, UINT16 *yr, UINT16 *da, UINT16 *hr, UINT16 *mn, U
 REAL64 util_ydhmsmtod(UINT16 yr, UINT16 da, UINT16 hr, UINT16 mn, UINT16 sc, UINT16 ms);
 VOID util_jdtomd(UINT16 year, UINT16 day, UINT16 *m_no, UINT16 *d_no);
 INT32 util_ymdtojd(UINT16 year, UINT16 mo, UINT16 da);
-INT32 util_today(VOID);
+INT32 util_today(void);
 VOID util_bindmp(FILE *fp, UINT8 *ptr, INT32 count, INT32 off, CHAR obase);
 VOID util_hexdmp(FILE *fp, UINT8 *ptr, INT32 count, INT32 off, CHAR obase);
 VOID util_octdmp(FILE *fp, UINT8 *ptr, INT32 count, INT32 off, CHAR obase);

@@ -17,6 +17,7 @@
 #include <list>
 #include <stack>
 #include <cstring>
+#include <cstdlib>
 
 #include "confbase.h"
 #include "utils.h"
